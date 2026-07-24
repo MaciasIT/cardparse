@@ -1,4 +1,3 @@
-import { Contact, FieldSource } from '../../../types/contact';
 import { buildVCard } from '../vcard';
 
 describe('export vCard', () => {
@@ -11,7 +10,7 @@ describe('export vCard', () => {
       phone: '600000000',
       website: 'https://example.com',
       note: 'nota',
-      source: 'front' as FieldSource,
+      source: 'front',
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };

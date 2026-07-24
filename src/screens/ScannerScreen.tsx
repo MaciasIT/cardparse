@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { palette, spacing } from '../config/theme';
 import { Button } from '../components';
@@ -10,6 +10,8 @@ export type ScannerScreenProps = {
 
 export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   const [permission, requestPermission] = useCameraPermissions();
+  const [busy, setBusy] = useState(false);
+  const [flash, setFlash] = useState(new Animated.Value(0));
 
   if (!permission) {
     return (
@@ -28,11 +30,22 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     );
   }
 
+  const handleSimulatedCapture = () => {
+    if (busy) return;
+    setBusy(true);
+    onCapture?.('file://demo-capture.jpg');
+    Animated.sequence([
+      Animated.timing(flash, { toValue: 1, duration: 120, useNativeDriver: true }),
+      Animated.timing(flash, { toValue: 0, duration: 220, useNativeDriver: true }),
+    ]).start(() => setBusy(false));
+  };
+
   return (
     <View style={styles.root}>
       <CameraView style={styles.camera} facing="back" />
+      <Animated.View style={[styles.flashOverlay, { opacity: flash }]} />
       <View style={styles.bottomAction}>
-        <Button title="Simular captura" onPress={() => onCapture?.('file://demo-capture.jpg')} />
+        <Button title={busy ? 'Capturando...' : 'Simular captura'} onPress={handleSimulatedCapture} />
       </View>
     </View>
   );
@@ -44,4 +57,5 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.bg, gap: spacing.md },
   text: { color: palette.text },
   bottomAction: { position: 'absolute', bottom: spacing.lg, left: spacing.md, right: spacing.md },
+  flashOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#ffffff', pointerEvents: 'none' },
 });
