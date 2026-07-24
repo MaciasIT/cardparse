@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "CardParse",
+    "slug": "cardparse",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0F14"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cardparse.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "CardParse necesita acceso a la cámara para escanear tarjetas de visita.",
+        "NSContactsUsageDescription": "CardParse necesita acceso a contactos para guardar las tarjetas escaneadas."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B0F14"
+      },
+      "package": "com.cardparse.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ]
+    },
+    "plugins": [
+      "expo-camera",
+      "expo-contacts",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          }
+        }
+      ]
+    ]
+  }
+}
