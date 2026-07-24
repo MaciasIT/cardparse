@@ -17,6 +17,6 @@
     },
     "resolveJsonModule": true
   },
-  "include": ["src/**/*", "app.json"],
+  "include": ["src/**/*", "app/**/*", "app.json"],
   "exclude": ["node_modules", "dist"]
 }

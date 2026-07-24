@@ -1,8 +1,9 @@
 import { buildVCard } from '../vcard';
+import type { Contact } from '../../../types/contact';
 
 describe('export vCard', () => {
   it('builds a minimal vCard with name', () => {
-    const contact = {
+    const contact: Contact = {
       id: '1',
       name: 'Juan Perez',
       company: 'ACME',

@@ -1,5 +1,5 @@
 import Share from 'react-native-share';
-import { Contact } from '@/types/contact';
+import { Contact } from '../../types/contact';
 import { downloadVCard } from './vcard';
 
 export async function shareContactVCard(contact: Contact) {
