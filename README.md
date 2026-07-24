@@ -10,7 +10,8 @@ React Native + TypeScript + Expo + Vision Camera + MMKV + MLKit + API OCR config
 ## Documentación
 - Plan de producto: `docs/plan.md`
 - Arquitectura: `docs/architecture.md`
-- Diseño UX: `docs/design.md`
+- Diseño UX / Design System: `docs/marketing/design.md`
+- Estrategia de crecimiento y distribución: `docs/marketing/growth.md`
 
 ## Estado
 Scaffold inicial en curso.
