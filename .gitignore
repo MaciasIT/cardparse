@@ -8,3 +8,6 @@ coverage/
 .env.local
 .vscode/
 .idea/
+android/
+*.apk
+*.aab
