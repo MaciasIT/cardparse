@@ -2,14 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Card, Button, palette, spacing } from '../components';
 import { Contact } from '../types/contact';
+import { shareContactVCard } from '../features/export/share';
 
 type Props = {
   contact: Contact;
-  onShareVCard?: (contact: Contact) => void;
   onBack?: () => void;
 };
 
-export function ContactDetailScreen({ contact, onShareVCard, onBack }: Props) {
+export function ContactDetailScreen({ contact, onBack }: Props) {
   const rows = [
     ['Nombre', contact.name],
     ['Empresa', contact.company],
@@ -19,9 +19,11 @@ export function ContactDetailScreen({ contact, onShareVCard, onBack }: Props) {
     ['Nota', contact.note],
   ];
 
+  const faceLabel = contact.source === 'front' ? 'Cara A' : contact.source === 'back' ? 'Cara B' : 'Doble cara';
+
   return (
     <ScrollView contentContainerStyle={styles.root}>
-      <Card title="Contacto" description={`${contact.source === 'front' ? 'Cara A' : contact.source === 'back' ? 'Cara B' : 'Doble cara'}`}>
+      <Card title="Contacto" description={faceLabel}>
         {rows.map(([label, value]) => {
           if (!value) return null;
           return (
@@ -33,7 +35,7 @@ export function ContactDetailScreen({ contact, onShareVCard, onBack }: Props) {
         })}
       </Card>
 
-      <Button title="Compartir vCard" onPress={() => onShareVCard?.(contact)} />
+      <Button title="Compartir vCard" onPress={() => shareContactVCard(contact)} />
       {!!onBack && <Button title="Volver" variant="secondary" onPress={onBack} />}
     </ScrollView>
   );

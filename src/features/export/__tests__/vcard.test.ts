@@ -1,4 +1,4 @@
-import { Contact } from '../../types/contact';
+import { Contact, FieldSource } from '../../../types/contact';
 import { buildVCard } from '../vcard';
 
 describe('export vCard', () => {
@@ -11,10 +11,10 @@ describe('export vCard', () => {
       phone: '600000000',
       website: 'https://example.com',
       note: 'nota',
-      source: 'front',
+      source: 'front' as FieldSource,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    } satisfies Contact;
+    };
 
     const vcard = buildVCard(contact);
     expect(vcard).toContain('BEGIN:VCARD');
