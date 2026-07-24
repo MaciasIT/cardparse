@@ -1,5 +1,5 @@
 module.exports = {
-  extends: '@react-native-community/eslint-config',
+  extends: ['expo'],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
   rules: {
