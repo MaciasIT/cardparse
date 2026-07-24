@@ -10,9 +10,10 @@ Escanea tarjetas de visita físicas, extrae datos con IA y genera vCards listas 
 
 ## Estado actual
 
-- **Tanda 1 completada**: scaffold ejecutable con navegación base.
+- **Tanda 10 completada**: historial navegable, onboarding real, export vCard y tests verdes.
 - **Typecheck**: `tsc --noEmit` passing.
-- **Commit real**: `8d6751c` en `main`.
+- **Tests**: parser 3/3 + export 1/1.
+- **Último commit real**: `a76c3c7` en `main`.
 - **Fase 5 en curso**: implementación por tandas hasta MVP navegable.
 
 ## Stack
@@ -22,9 +23,9 @@ Escanea tarjetas de visita físicas, extrae datos con IA y genera vCards listas 
 | App | Expo `~52.0.0` |
 | Runtime | React Native `0.76.6` |
 | Lenguaje | TypeScript `5.5.4` |
-| Navegación | `@react-navigation/native` + bottom tabs |
-| Estado | Zustand `5.0.0` |
-| Almacenamiento local | MMKV |
+| Navegación | `@react-navigation/native` + bottom tabs + native stack |
+| Estado | MMKV / hooks locales |
+| Almacenamiento local | MMKV `react-native-mmkv` |
 | Cámara / Imagen | Expo Camera / Image Picker |
 | Contactos / Share | Expo Contacts / React Native Share |
 
