@@ -7,7 +7,6 @@
 
 /**
  * Límite de contactos en almacenamiento local.
- * MMKV puede manejar más, pero para rendimiento recomendamos un tope.
  */
 export const MAX_CONTACTS = 5000;
 

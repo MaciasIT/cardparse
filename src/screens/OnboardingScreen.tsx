@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { palette, spacing } from '../components';
-import { createMMKV } from 'react-native-mmkv';
+import storage from '../lib/mmkv';
 
-const storage = createMMKV();
+const ONBOARDING_KEY = '@cardparse/onboarding/done';
 
 export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const seen = storage.getBoolean('@cardparse/onboarding/done');
+      const seen = await storage.getBoolean(ONBOARDING_KEY);
       if (seen) onFinish();
     })();
   }, [onFinish]);
@@ -20,8 +20,7 @@ export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
       setStep(1);
       return;
     }
-
-    storage.set('@cardparse/onboarding/done', true);
+    await storage.setBoolean(ONBOARDING_KEY, true);
     onFinish();
   }, [onFinish, step]);
 
