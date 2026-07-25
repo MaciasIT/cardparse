@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@types/jest": "29.5.0",
-    "@types/react": "18.3.0",
+    "@types/react": "^18.3.12",
     "@types/react-test-renderer": "18.0.0",
     "@typescript-eslint/eslint-plugin": "8.0.0",
     "@typescript-eslint/parser": "8.0.0",
@@ -45,6 +45,15 @@
     "prettier": "3.3.0",
     "react-test-renderer": "18.3.1",
     "typescript": "5.5.4"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@react-navigation/bottom-tabs",
+        "@react-navigation/native",
+        "@react-navigation/native-stack"
+      ]
+    }
   },
   "engines": {
     "node": ">=18"
