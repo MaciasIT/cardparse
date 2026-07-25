@@ -2,7 +2,7 @@
   "name": "cardparse",
   "version": "0.1.0",
   "private": true,
-  "main": "expo-router/entry",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "android": "expo run:android",
     "ios": "expo run:ios",
