@@ -1,17 +1,35 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Alert, Animated, StyleSheet, Text, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { palette, spacing } from '../config/theme';
 import { Button } from '../components';
+import { loadProviderConfig } from '../lib/storage';
+import { normalizeOcrResponse } from '../features/ocr/normalizeOcrResponse';
+import { OcrService } from '../features/ocr/ocrService';
+import { parseContact } from '../features/parser/contactParser';
+import type { ScanMetadata } from '../types/contact';
 
 export type ScannerScreenProps = {
   onCapture?: (uri: string) => void;
 };
 
+async function readImageAsBase64(uri: string): Promise<string> {
+  const response = await fetch(uri);
+  const buffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const [busy, setBusy] = useState(false);
-  const [flash, setFlash] = useState(new Animated.Value(0));
+  const flash = useState(new Animated.Value(0))[0];
+  const cameraRef = useRef<CameraView | null>(null);
+  const ocrService = new OcrService();
 
   if (!permission) {
     return (
@@ -30,22 +48,70 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     );
   }
 
-  const handleSimulatedCapture = () => {
+  async function handleCapture() {
     if (busy) return;
     setBusy(true);
-    onCapture?.('file://demo-capture.jpg');
-    Animated.sequence([
-      Animated.timing(flash, { toValue: 1, duration: 120, useNativeDriver: true }),
-      Animated.timing(flash, { toValue: 0, duration: 220, useNativeDriver: true }),
-    ]).start(() => setBusy(false));
-  };
+
+    try {
+      const config = await loadProviderConfig();
+
+      if (!config?.enabled || !config?.endpoint || !config?.apiKey) {
+        Alert.alert(
+          'Proveedor OCR no configurado',
+          'No hay un proveedor OCR activo. Ve a Ajustes para configurarlo.',
+          [
+            { text: 'Ajustes', onPress: () => {} },
+            { text: 'OK', style: 'cancel' },
+          ]
+        );
+        setBusy(false);
+        return;
+      }
+
+      const photo = await cameraRef.current?.takePictureAsync?.();
+      if (!photo?.uri) {
+        Alert.alert('Error', 'No se pudo capturar la imagen.');
+        setBusy(false);
+        return;
+      }
+
+      const base64 = await readImageAsBase64(photo.uri);
+
+      if (!base64 || base64.length === 0) {
+        Alert.alert('Error', 'No se pudo codificar la imagen a base64.');
+        setBusy(false);
+        return;
+      }
+
+      const ac = new AbortController();
+      const result = await ocrService.execute(config, base64, ac.signal);
+      ocrService.cancel();
+
+      const providerResponse = normalizeOcrResponse({ rawText: result.rawText });
+      const parsed = parseContact(providerResponse.rawText);
+
+      const metadata: ScanMetadata = {
+        contactId: parsed.contact.id,
+        ocrProvider: 'external',
+        rawTextFront: providerResponse.rawText,
+        processingMs: result.processingMs,
+      };
+
+      onCapture?.(photo.uri);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido al procesar la imagen';
+      Alert.alert('Error al procesar', msg);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <View style={styles.root}>
-      <CameraView style={styles.camera} facing="back" />
+      <CameraView ref={cameraRef} style={styles.camera} facing="back" />
       <Animated.View style={[styles.flashOverlay, { opacity: flash }]} />
       <View style={styles.bottomAction}>
-        <Button title={busy ? 'Capturando...' : 'Simular captura'} onPress={handleSimulatedCapture} />
+        <Button title={busy ? 'Procesando...' : 'Capturar y procesar'} onPress={handleCapture} />
       </View>
     </View>
   );
