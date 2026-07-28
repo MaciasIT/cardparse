@@ -7,7 +7,8 @@ import { loadProviderConfig } from '../lib/storage';
 import { normalizeOcrResponse } from '../features/ocr/normalizeOcrResponse';
 import { OcrService } from '../features/ocr/ocrService';
 import { parseContact } from '../features/parser/contactParser';
-import type { ScanMetadata } from '../types/contact';
+import { ReviewScreen } from './ReviewScreen';
+import type { Contact, ScanMetadata } from '../types/contact';
 
 export type ScannerScreenProps = {
   onCapture?: (uri: string) => void;
@@ -30,6 +31,7 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   const flash = useState(new Animated.Value(0))[0];
   const cameraRef = useRef<CameraView | null>(null);
   const ocrService = new OcrService();
+  const [pendingContact, setPendingContact] = useState<Contact | null>(null);
 
   if (!permission) {
     return (
@@ -97,6 +99,13 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
         processingMs: result.processingMs,
       };
 
+      const pending: Contact = {
+        ...parsed.contact,
+        source: 'both',
+        updatedAt: Date.now(),
+      };
+
+      setPendingContact(pending);
       onCapture?.(photo.uri);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido al procesar la imagen';
@@ -106,6 +115,15 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     }
   }
 
+  function handleReviewConfirm(contact: Contact) {
+    setPendingContact(null);
+    Alert.alert('Contacto confirmado', contact.name || 'Sin nombre');
+  }
+
+  function handleReviewCancel() {
+    setPendingContact(null);
+  }
+
   return (
     <View style={styles.root}>
       <CameraView ref={cameraRef} style={styles.camera} facing="back" />
@@ -113,6 +131,13 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
       <View style={styles.bottomAction}>
         <Button title={busy ? 'Procesando...' : 'Capturar y procesar'} onPress={handleCapture} />
       </View>
+
+      <ReviewScreen
+        visible={!!pendingContact}
+        contact={pendingContact ?? { id: '', name: '', source: 'both', createdAt: Date.now(), updatedAt: Date.now() }}
+        onConfirm={handleReviewConfirm}
+        onCancel={handleReviewCancel}
+      />
     </View>
   );
 }
