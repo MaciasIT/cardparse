@@ -8,6 +8,7 @@ export type ReviewScreenProps = {
   visible: boolean;
   onConfirm: (contact: Contact) => void;
   onCancel: () => void;
+  onShare?: (contact: Contact) => void;
 };
 
 export function sanitizeText(value: string): string {
@@ -22,13 +23,21 @@ export function ensureContact(contact: Contact): Contact {
   };
 }
 
-export function ReviewScreen({ contact, visible, onConfirm, onCancel }: ReviewScreenProps) {
+export function ReviewScreen({ contact, visible, onConfirm, onCancel, onShare }: ReviewScreenProps) {
   const [form, setForm] = useState<Contact>(ensureContact(contact));
 
   if (!visible) return null;
 
   function update<K extends keyof Contact>(key: K, value: Contact[K]) {
     setForm((prev) => ({ ...prev, [key]: sanitizeText(value as string) }));
+  }
+
+  const hasName = sanitizeText(form.name || '').length > 0;
+  const canShare = !!onShare && hasName;
+
+  function handleShare() {
+    if (!onShare || !hasName) return;
+    onShare(ensureContact(form));
   }
 
   return (
@@ -44,6 +53,14 @@ export function ReviewScreen({ contact, visible, onConfirm, onCancel }: ReviewSc
         <Field label="Nota" value={form.note} onChangeText={(text) => update('note', text)} multiline />
 
         <View style={styles.actions}>
+          {!!onShare && (
+            <Button
+              title={hasName ? 'Compartir' : 'Compartir (nombre obligatorio)'}
+              variant={hasName ? 'primary' : 'secondary'}
+              onPress={handleShare}
+              style={hasName ? undefined : styles.disabledButton}
+            />
+          )}
           <Button title="Cancelar" variant="secondary" onPress={onCancel} />
           <Button title="Confirmar" onPress={() => onConfirm(ensureContact(form))} />
         </View>
@@ -75,4 +92,5 @@ const styles = StyleSheet.create({
   label: { color: palette.muted, fontSize: 12, textTransform: 'uppercase', fontWeight: '600' },
   input: { color: palette.text, borderWidth: 1, borderColor: palette.border, borderRadius: 12, padding: spacing.sm },
   actions: { flexDirection: 'row', gap: spacing.sm, justifyContent: 'flex-end' },
+  disabledButton: { opacity: 0.5 },
 });

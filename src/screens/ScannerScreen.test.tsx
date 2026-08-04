@@ -38,6 +38,15 @@ jest.mock('../features/ocr/ocrService', () => {
   };
 });
 
+jest.mock('../features/export/share', () => ({
+  shareContactVCard: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('react-native-share', () => ({
+  __esModule: true,
+  default: { open: jest.fn() },
+}));
+
 type Instance = TestRenderer.ReactTestInstance;
 
 function allTexts(renderer: TestRenderer.ReactTestRenderer): string[] {

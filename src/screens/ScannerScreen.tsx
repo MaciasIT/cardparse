@@ -9,6 +9,7 @@ import { OcrService } from '../features/ocr/ocrService';
 import { parseContact } from '../features/parser/contactParser';
 import { combineSides } from '../features/parser/combineSides';
 import { ReviewScreen } from './ReviewScreen';
+import { shareContactVCard } from '../features/export/share';
 import type { Contact, ScanMetadata } from '../types/contact';
 
 export type ScannerScreenProps = {
@@ -241,6 +242,7 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
         contact={pendingContact ?? { id: '', name: '', source: 'both', createdAt: Date.now(), updatedAt: Date.now() }}
         onConfirm={handleReviewConfirm}
         onCancel={handleReviewCancel}
+        onShare={shareContactVCard}
       />
     </View>
   );
