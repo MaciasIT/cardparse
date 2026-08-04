@@ -39,6 +39,8 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 | **T11** ✅ | `4190f15` | Polish UI scanner, feedback visual de captura, ajustes con filas reales | HU-01 |
 | **T12** ✅ | `7e73887` | Typecheck global limpio, imports corregidos, tsconfig extendido | — |
 | **T13** ✅ | `d07e271`→`a0d8c17` | Build EAS funcional, AsyncStorage, dependencias alineadas, React Navigation puro | — |
+| **T14** ✅ | `f7810d7` | OCR real externo vía proveedor configurable (ocrService + normalizeOcrResponse) | HU-01, HU-04 |
+| **T15** ✅ | `0934dd3` | Confirmación y edición mínima antes de guardar (ReviewScreen) | HU-05 |
 
 ---
 
@@ -48,35 +50,32 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T14** ⬜ | **OCR real** | Conectar API OpenRouter/Google para OCR real. No simulación. El scanner captura la imagen, la envía a la API y parsea la respuesta. | HU-01, HU-04 |
-| **T15** ⬜ | **Edición manual** | Pantalla Review/Edit entre captura y guardado. El usuario ve los datos extraídos, los corrige y confirma antes de guardar. | HU-05 |
-| **T16** ⬜ | **Doble cara** | Flujo: capturar Cara A → voltear → capturar Cara B → Review unificado con ambos lados. | HU-01b |
-| **T17** ⬜ | **Compartir sin guardar** | Botón "Compartir" directo desde la Review, sin pasar por historial. | HU-08 |
+| **T16** 🔄 | **Config proveedor OCR** | Configuración visible del proveedor OCR en Ajustes: endpoint, modelo, estado activo, API key enmascarada, última guardada. OpenSpec `ocr-provider-settings` validado. | HU-01, HU-04 |
+| **T17** ⬜ | **Doble cara** | Flujo: capturar Cara A → voltear → capturar Cara B → Review unificado con ambos lados. | HU-01b |
+| **T18** ⬜ | **Compartir sin guardar** | Botón "Compartir" directo desde la Review, sin pasar por historial. | HU-08 |
 
 ### 🥈 Prioridad Media — Mejoras MVP
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T18** ⬜ | **Recorte automático** | Detectar bordes de la tarjeta en la imagen y recortar antes de enviar a OCR. | HU-02 |
-| **T19** ⬜ | **Onboarding completo** | Tercera pantalla de onboarding (tutorial de doble cara). | HU-13 |
-| **T20** ⬜ | **Búsqueda en historial** | Barra de búsqueda/filtro en el historial. | HU-10 |
+| **T19** ⬜ | **Recorte automático** | Detectar bordes de la tarjeta en la imagen y recortar antes de enviar a OCR. | HU-02 |
+| **T20** ⬜ | **Onboarding completo** | Tercera pantalla de onboarding (tutorial de doble cara). | HU-13 |
+| **T21** ⬜ | **Búsqueda en historial** | Barra de búsqueda/filtro en el historial. | HU-10 |
 
 ### 🥉 Prioridad Baja — Post-MVP
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T21** ⬜ | Mejora de imagen previa OCR | HU-03 |
-| **T22** ⬜ | Normalización teléfonos/idioma | HU-06 |
-| **T23** ⬜ | Favoritos | HU-11 |
-| **T24** ⬜ | Detección de logo | HU-01c |
-| **T25** ⬜ | Guardado en agenda del dispositivo | HU-09 |
-| **T26** ⬜ | Cambio idioma ES/EN | HU-14 |
-| **T27** ⬜ | Escaneo en lote | HU-15 |
+| **T22** ⬜ | Mejora de imagen previa OCR | HU-03 |
+| **T23** ⬜ | Normalización teléfonos/idioma | HU-06 |
+| **T24** ⬜ | Favoritos | HU-11 |
+| **T25** ⬜ | Detección de logo | HU-01c |
+| **T26** ⬜ | Guardado en agenda del dispositivo | HU-09 |
+| **T27** ⬜ | Cambio idioma ES/EN | HU-14 |
+| **T28** ⬜ | Escaneo en lote | HU-15 |
 
 ---
 
 ## Próximo paso
 
-**T14 — OCR real.** Conectar el scanner con OpenRouter o Google Vision para que la captura no sea simulada sino que devuelva datos reales parseados.
-
-¿Sigo por ahí?
+**T16 — Configuración de proveedor OCR en Ajustes** (en curso): mostrar y editar endpoint, modelo, estado activo y API key enmascarada en SettingsScreen, usando `saveProviderConfig()` / `loadProviderConfig()`.
