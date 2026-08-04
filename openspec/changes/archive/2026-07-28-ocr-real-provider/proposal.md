@@ -1,5 +1,15 @@
 # T14 — OCR real externo vía proveedor configurable
 
+## Why
+El flujo actual simula la captura y usa texto preescrito. Eso no satisface HU-01 ni HU-04 y deja la app sin valor real fuera del emulador. Esta change conecta la cámara con un proveedor OCR real para obtener texto parseado de verdad.
+
+## What Changes
+- Añade capa `src/features/ocr/` con cliente HTTP configurable.
+- Modifica `ScannerScreen` para captura real con `takePictureAsync()` y encode base64.
+- Añade `normalizeOcrResponse()` para envolver respuestas de proveedor y alimentar el parser existente.
+- Persiste `ProviderConfig` en ajustes y añade manejo de errores sin crash.
+- Añade tests de contrato y documentación en `openspec/changes/ocr-real-provider/`.
+
 ## Problema
 El flujo actual escanea simulando captura: `ScannerScreen` emite `file://demo-capture.jpg` y el parser recibe texto preescrito. Eso no satisface HU-01 ni HU-04.
 
