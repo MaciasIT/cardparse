@@ -8,6 +8,7 @@ import { normalizeOcrResponse } from '../features/ocr/normalizeOcrResponse';
 import { OcrService } from '../features/ocr/ocrService';
 import { parseContact } from '../features/parser/contactParser';
 import { combineSides } from '../features/parser/combineSides';
+import { cropImage } from '../features/camera/cropToContent';
 import { ReviewScreen } from './ReviewScreen';
 import { shareContactVCard } from '../features/export/share';
 import type { Contact, ScanMetadata } from '../types/contact';
@@ -76,7 +77,9 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
       throw new Error('PROVIDER_NOT_CONFIGURED');
     }
 
-    const base64 = await readImageAsBase64(uri);
+    // T19: recorte automático de bordes antes del OCR. Si falla, usa la original.
+    const imageUri = await cropImage(uri);
+    const base64 = await readImageAsBase64(imageUri);
 
     if (!base64 || base64.length === 0) {
       throw new Error('No se pudo codificar la imagen a base64.');

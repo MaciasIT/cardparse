@@ -42,6 +42,10 @@ jest.mock('../features/export/share', () => ({
   shareContactVCard: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock('../features/camera/cropToContent', () => ({
+  cropImage: jest.fn(async (uri: string) => uri),
+}));
+
 jest.mock('react-native-share', () => ({
   __esModule: true,
   default: { open: jest.fn() },
