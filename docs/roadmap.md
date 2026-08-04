@@ -41,6 +41,8 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 | **T13** ✅ | `d07e271`→`a0d8c17` | Build EAS funcional, AsyncStorage, dependencias alineadas, React Navigation puro | — |
 | **T14** ✅ | `f7810d7` | OCR real externo vía proveedor configurable (ocrService + normalizeOcrResponse) | HU-01, HU-04 |
 | **T15** ✅ | `0934dd3` | Confirmación y edición mínima antes de guardar (ReviewScreen) | HU-05 |
+| **T16** ✅ | `228f92a` | Configuración visible del proveedor OCR en Ajustes (endpoint, modelo, API key enmascarada, toggle activo) | HU-01, HU-04 |
+| **T17** ✅ | `ce01014` | Escaneo de doble cara: Cara A → Cara B → Review unificado (`combineSides`) | HU-01b |
 
 ---
 
@@ -50,8 +52,6 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T16** 🔄 | **Config proveedor OCR** | Configuración visible del proveedor OCR en Ajustes: endpoint, modelo, estado activo, API key enmascarada, última guardada. OpenSpec `ocr-provider-settings` validado. | HU-01, HU-04 |
-| **T17** ⬜ | **Doble cara** | Flujo: capturar Cara A → voltear → capturar Cara B → Review unificado con ambos lados. | HU-01b |
 | **T18** ⬜ | **Compartir sin guardar** | Botón "Compartir" directo desde la Review, sin pasar por historial. | HU-08 |
 
 ### 🥈 Prioridad Media — Mejoras MVP
@@ -78,4 +78,4 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ## Próximo paso
 
-**T16 — Configuración de proveedor OCR en Ajustes** (en curso): mostrar y editar endpoint, modelo, estado activo y API key enmascarada en SettingsScreen, usando `saveProviderConfig()` / `loadProviderConfig()`.
+**T18 — Compartir sin guardar:** botón "Compartir" directo desde la Review, sin pasar por historial (HU-08).
