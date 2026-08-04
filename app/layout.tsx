@@ -1,14 +1,36 @@
 import * as React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Button, palette, spacing } from '../src/components';
+import { palette, spacing } from '../src/components';
 import { ScannerScreen } from '../src/screens/ScannerScreen';
 import { HistoryScreen } from '../src/screens/HistoryScreen';
 import { SettingsScreen } from '../src/screens/SettingsScreen';
+import { OnboardingScreen } from '../src/screens/OnboardingScreen';
+import storage from '../src/lib/mmkv';
+import { STORAGE_KEYS } from '../src/lib/storage';
 
 const Tab = createBottomTabNavigator();
 
 export default function Layout() {
+  const [onboardingDone, setOnboardingDone] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    (async () => {
+      const done = await storage.getBoolean(STORAGE_KEYS.onboarding);
+      setOnboardingDone(done === true);
+    })();
+  }, []);
+
+  const handleRestartOnboarding = React.useCallback(async () => {
+    await storage.remove(STORAGE_KEYS.onboarding);
+    setOnboardingDone(false);
+  }, []);
+
+  if (onboardingDone === null) {
+    return <View style={styles.loading} />;
+  }
+
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -20,10 +42,31 @@ export default function Layout() {
           tabBarInactiveTintColor: palette.muted,
         }}
       >
-        <Tab.Screen name="Scanner" component={ScannerScreen} />
-        <Tab.Screen name="Historial" component={HistoryScreen} />
-        <Tab.Screen name="Ajustes" component={SettingsScreen} />
+        <Tab.Screen name="Scanner">
+          {() => <ScannerScreen />}
+        </Tab.Screen>
+        <Tab.Screen name="Historial">
+          {() => <HistoryScreen />}
+        </Tab.Screen>
+        <Tab.Screen name="Ajustes">
+          {() => <SettingsScreen onRestartOnboarding={handleRestartOnboarding} />}
+        </Tab.Screen>
       </Tab.Navigator>
+
+      {!onboardingDone && (
+        <View style={styles.overlay}>
+          <OnboardingScreen onFinish={() => setOnboardingDone(true)} />
+        </View>
+      )}
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: { flex: 1, backgroundColor: palette.bg },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: palette.bg,
+    zIndex: 10,
+  },
+});

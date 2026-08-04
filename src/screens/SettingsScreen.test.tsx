@@ -187,4 +187,47 @@ describe('SettingsScreen — configuración OCR (T16)', () => {
     expect(saved.model).toBe(SAMPLE_CONFIG.model);
     expect(hasText(renderer, 'Desactivado')).toBe(true);
   });
+
+  it('la fila de onboarding reinicia cuando hay callback', async () => {
+    mockLoad.mockResolvedValue(null);
+    const onRestart = jest.fn();
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(<SettingsScreen onRestartOnboarding={onRestart} />);
+    });
+    await flush();
+
+    const restartRow = renderer.root
+      .findAll((n) => n.props && typeof n.props.onPress === 'function')
+      .find((p) => {
+        const out: string[] = [];
+        const visit = (node: Instance) => {
+          if (String(node.type) === 'Text' && Array.isArray(node.children)) {
+            const plain = node.children.filter((c) => typeof c === 'string').join('');
+            if (plain) out.push(plain);
+          }
+          node.children?.forEach((c) => {
+            if (typeof c !== 'string') visit(c);
+          });
+        };
+        visit(p);
+        return out.some((t) => t.includes('Onboarding'));
+      });
+
+    expect(restartRow).toBeDefined();
+    act(() => {
+      restartRow!.props.onPress();
+    });
+    expect(onRestart).toHaveBeenCalledTimes(1);
+  });
+
+  it('la fila de onboarding no rompe sin callback', async () => {
+    mockLoad.mockResolvedValue(null);
+    const renderer = renderSettings(); // sin onRestartOnboarding
+    await flush();
+
+    // El render no rompe y la fila sigue presente
+    expect(hasText(renderer, 'Onboarding')).toBe(true);
+    expect(hasText(renderer, 'Reiniciar')).toBe(true);
+  });
 });

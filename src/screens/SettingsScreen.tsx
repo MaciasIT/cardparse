@@ -42,7 +42,7 @@ function formatLastSaved(timestamp?: number): string | null {
   }
 }
 
-export function SettingsScreen() {
+export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: () => void }) {
   const [config, setConfig] = useState<ProviderConfig | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -206,7 +206,12 @@ export function SettingsScreen() {
       <View style={styles.card}>
         <SettingRow label="Cámara" description="Permiso para escanear tarjetas" action="Conceder" />
         <SettingRow label="Contactos" description="Permiso para guardar contactos" action="Conceder" />
-        <SettingRow label="Onboarding" description="Repetir la introducción" action="Reiniciar" />
+        <SettingRow
+          label="Onboarding"
+          description="Repetir la introducción"
+          action="Reiniciar"
+          onPress={onRestartOnboarding}
+        />
         <SettingRow label="Versión" description="CardParse MVP" action="0.1.0" />
       </View>
 

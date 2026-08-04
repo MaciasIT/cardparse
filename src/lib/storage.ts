@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   contacts: '@cardparse/contacts',
   provider: '@cardparse/provider',
   appConfig: '@cardparse/app-config',
+  onboarding: '@cardparse/onboarding/done',
 } as const;
 
 export function serializeContacts(contacts: Contact[]): string {

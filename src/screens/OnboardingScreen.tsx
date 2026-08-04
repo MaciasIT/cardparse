@@ -2,36 +2,36 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { palette, spacing } from '../components';
 import storage from '../lib/mmkv';
-
-const ONBOARDING_KEY = '@cardparse/onboarding/done';
+import { STORAGE_KEYS } from '../lib/storage';
 
 export function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const seen = await storage.getBoolean(ONBOARDING_KEY);
+      const seen = await storage.getBoolean(STORAGE_KEYS.onboarding);
       if (seen) onFinish();
     })();
   }, [onFinish]);
 
   const handleNext = useCallback(async () => {
-    if (step === 0) {
-      setStep(1);
+    if (step < 2) {
+      setStep(step + 1);
       return;
     }
-    await storage.setBoolean(ONBOARDING_KEY, true);
+    await storage.setBoolean(STORAGE_KEYS.onboarding, true);
     onFinish();
   }, [onFinish, step]);
 
-  const content = step === 0 ? introText() : detailText();
+  const content = [introText(), detailText(), doubleSideText()][step];
 
   return (
     <View style={styles.root}>
+      <Text style={styles.step}>{step + 1} / 3</Text>
       <Text style={styles.title}>{content.title}</Text>
       <Text style={styles.subtitle}>{content.body}</Text>
       <Pressable style={styles.button} onPress={handleNext}>
-        <Text style={styles.buttonLabel}>{step === 0 ? 'Siguiente' : 'Empezar'}</Text>
+        <Text style={styles.buttonLabel}>{step < 2 ? 'Siguiente' : 'Empezar'}</Text>
       </Pressable>
     </View>
   );
@@ -51,8 +51,16 @@ function detailText() {
   };
 }
 
+function doubleSideText() {
+  return {
+    title: 'Doble cara',
+    body: 'Gira la tarjeta y escanea también el reverso: CardParse une ambas caras en un solo contacto.',
+  };
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: palette.bg, alignItems: 'center', justifyContent: 'center', padding: spacing.md, gap: spacing.md },
+  step: { color: palette.muted, fontSize: 13, fontWeight: '600' },
   title: { color: palette.text, fontSize: 28, fontWeight: '700' },
   subtitle: { color: palette.muted, fontSize: 15, textAlign: 'center' },
   button: { backgroundColor: palette.accent, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 999 },
