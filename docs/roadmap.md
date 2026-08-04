@@ -44,6 +44,7 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 | **T16** ✅ | `228f92a` | Configuración visible del proveedor OCR en Ajustes (endpoint, modelo, API key enmascarada, toggle activo) | HU-01, HU-04 |
 | **T17** ✅ | `ce01014` | Escaneo de doble cara: Cara A → Cara B → Review unificado (`combineSides`) | HU-01b |
 | **T18** ✅ | `f5abe6c` | Compartir sin guardar desde la Review (`shareContactVCard` sin pasar por historial) | HU-08 |
+| **T19** ✅ | `53996f4` | Recorte automático de bordes antes de OCR (margen 8% vía expo-image-manipulator) | HU-02 |
 
 ---
 
@@ -53,7 +54,7 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T19** ⬜ | **Recorte automático** | Detectar bordes de la tarjeta en la imagen y recortar antes de enviar a OCR. | HU-02 |
+| **T20** ⬜ | **Onboarding completo** | Tercera pantalla de onboarding (tutorial de doble cara). | HU-13 |
 
 ### 🥈 Prioridad Media — Mejoras MVP
 
@@ -79,4 +80,4 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ## Próximo paso
 
-**T19 — Recorte automático:** detectar bordes de la tarjeta en la imagen y recortar antes de enviar a OCR (HU-02).
+**T20 — Onboarding completo:** tercera pantalla de onboarding con tutorial de doble cara (HU-13).
