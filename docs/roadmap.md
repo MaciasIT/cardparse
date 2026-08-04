@@ -43,6 +43,7 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 | **T15** ✅ | `0934dd3` | Confirmación y edición mínima antes de guardar (ReviewScreen) | HU-05 |
 | **T16** ✅ | `228f92a` | Configuración visible del proveedor OCR en Ajustes (endpoint, modelo, API key enmascarada, toggle activo) | HU-01, HU-04 |
 | **T17** ✅ | `ce01014` | Escaneo de doble cara: Cara A → Cara B → Review unificado (`combineSides`) | HU-01b |
+| **T18** ✅ | `f5abe6c` | Compartir sin guardar desde la Review (`shareContactVCard` sin pasar por historial) | HU-08 |
 
 ---
 
@@ -52,7 +53,7 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T18** ⬜ | **Compartir sin guardar** | Botón "Compartir" directo desde la Review, sin pasar por historial. | HU-08 |
+| **T19** ⬜ | **Recorte automático** | Detectar bordes de la tarjeta en la imagen y recortar antes de enviar a OCR. | HU-02 |
 
 ### 🥈 Prioridad Media — Mejoras MVP
 
@@ -78,4 +79,4 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ## Próximo paso
 
-**T18 — Compartir sin guardar:** botón "Compartir" directo desde la Review, sin pasar por historial (HU-08).
+**T19 — Recorte automático:** detectar bordes de la tarjeta en la imagen y recortar antes de enviar a OCR (HU-02).
