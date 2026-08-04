@@ -45,6 +45,7 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 | **T17** ✅ | `ce01014` | Escaneo de doble cara: Cara A → Cara B → Review unificado (`combineSides`) | HU-01b |
 | **T18** ✅ | `f5abe6c` | Compartir sin guardar desde la Review (`shareContactVCard` sin pasar por historial) | HU-08 |
 | **T19** ✅ | `53996f4` | Recorte automático de bordes antes de OCR (margen 8% vía expo-image-manipulator) | HU-02 |
+| **T20** ✅ | `606492f` | Onboarding completo: 3 pasos (intro, guardar/compartir, doble cara) + montaje en arranque + reinicio desde Ajustes | HU-13 |
 
 ---
 
@@ -54,7 +55,7 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T20** ⬜ | **Onboarding completo** | Tercera pantalla de onboarding (tutorial de doble cara). | HU-13 |
+| **T21** ⬜ | **Búsqueda en historial** | Barra de búsqueda/filtro en el historial. | HU-10 |
 
 ### 🥈 Prioridad Media — Mejoras MVP
 
@@ -80,4 +81,4 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ## Próximo paso
 
-**T20 — Onboarding completo:** tercera pantalla de onboarding con tutorial de doble cara (HU-13).
+**T21 — Búsqueda en historial:** barra de búsqueda/filtro en el historial (HU-10).
