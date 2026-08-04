@@ -45,7 +45,8 @@ export async function loadContacts(): Promise<Contact[]> {
 }
 
 export async function saveProviderConfig(config: ProviderConfig): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEYS.provider, JSON.stringify(config));
+  const withTimestamp = { ...config, updatedAt: Date.now() };
+  await AsyncStorage.setItem(STORAGE_KEYS.provider, JSON.stringify(withTimestamp));
 }
 
 export async function loadProviderConfig(): Promise<ProviderConfig | null> {
@@ -61,6 +62,7 @@ export async function loadProviderConfig(): Promise<ProviderConfig | null> {
       apiKey: parsed.apiKey ?? '',
       model: parsed.model,
       enabled: parsed.enabled ?? true,
+      updatedAt: parsed.updatedAt,
     };
   } catch {
     return null;

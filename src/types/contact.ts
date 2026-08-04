@@ -29,4 +29,5 @@ export interface ProviderConfig {
   apiKey: string;
   model: string;
   enabled: boolean;
+  updatedAt?: number;
 }
