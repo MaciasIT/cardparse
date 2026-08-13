@@ -55,7 +55,7 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T21** ⬜ | **Búsqueda en historial** | Barra de búsqueda/filtro en el historial. | HU-10 |
+| **T29** ⬜ | **Escaneo en lote mejorado** | Cola de capturas con progreso y reintentos. | HU-15b |
 
 ### 🥉 Prioridad Baja — Post-MVP
 
@@ -73,4 +73,4 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ## Próximo paso
 
-**T21 — Búsqueda en historial:** barra de búsqueda/filtro en el historial (HU-10). 🎯 Siguiente tanda
+**T29 — Escaneo en lote mejorado:** cola de capturas con progreso y reintentos (HU-15b). 🎯 Siguiente tanda

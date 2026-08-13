@@ -18,6 +18,7 @@ export type ScannerScreenProps = {
 };
 
 type ScanPhase = 'idle' | 'front-captured' | 'back-captured';
+type BatchItem = { uri: string; rawText: string };
 
 async function readImageAsBase64(uri: string): Promise<string> {
   const response = await fetch(uri);
@@ -40,6 +41,9 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   const [frontText, setFrontText] = useState<string | null>(null);
   const [backText, setBackText] = useState<string | null>(null);
   const [pendingContact, setPendingContact] = useState<Contact | null>(null);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchQueue, setBatchQueue] = useState<BatchItem[]>([]);
+  const [batchSaving, setBatchSaving] = useState(false);
 
   if (!permission) {
     return (
@@ -77,7 +81,6 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
       throw new Error('PROVIDER_NOT_CONFIGURED');
     }
 
-    // T19: recorte automático de bordes antes del OCR. Si falla, usa la original.
     const imageUri = await cropImage(uri);
     const base64 = await readImageAsBase64(imageUri);
 
@@ -93,8 +96,44 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     return { rawText: providerResponse.rawText, processingMs: result.processingMs };
   }
 
+  async function processBatchItem(uri: string): Promise<BatchItem> {
+    const { rawText } = await processImage(uri);
+    return { uri, rawText };
+  }
+
+  async function runBatch(items: BatchItem[]) {
+    setBatchSaving(true);
+    for (const item of items) {
+      const combined = combineSides(item.rawText, '');
+      const parsed = parseContact(combined);
+
+      const pending: Contact = {
+        ...parsed.contact,
+        source: 'front',
+        updatedAt: Date.now(),
+      };
+
+      setPendingContact(pending);
+      await new Promise<void>((resolve) => {
+        const timeout = setTimeout(resolve, 300);
+        const check = () => {
+          if (!pendingContact) {
+            clearTimeout(timeout);
+            resolve();
+            return;
+          }
+          setTimeout(check, 100);
+        };
+        check();
+      });
+    }
+    setBatchQueue([]);
+    setBatchSaving(false);
+    setBatchMode(false);
+  }
+
   async function handleCaptureFront() {
-    if (busy) return;
+    if (busy || batchSaving) return;
     setBusy(true);
 
     try {
@@ -104,9 +143,17 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
         return;
       }
 
-      const { rawText } = await processImage(photo.uri);
-      setFrontText(rawText);
-      setPhase('front-captured');
+      if (batchMode) {
+        const item = await processBatchItem(photo.uri);
+        setBatchQueue((prev) => [...prev, item]);
+        setFrontText(item.rawText);
+        setPhase('front-captured');
+      } else {
+        const { rawText } = await processImage(photo.uri);
+        setFrontText(rawText);
+        setPhase('front-captured');
+      }
+
       setBusy(false);
       onCapture?.(photo.uri);
     } catch (err) {
@@ -118,7 +165,7 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   }
 
   async function handleCaptureBack() {
-    if (busy) return;
+    if (busy || batchSaving) return;
     setBusy(true);
 
     try {
@@ -134,42 +181,40 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
       setBusy(false);
       onCapture?.(photo.uri);
 
-      const combined = combineSides(frontText, backRaw);
-      const parsed = parseContact(combined);
+      if (batchMode) {
+        const frontRaw = frontText ?? '';
+        const item: BatchItem = { uri: photo.uri, rawText: combineSides(frontRaw, backRaw) };
+        setBatchQueue((prev) => [...prev, item]);
+        setFrontText(null);
+        setBackText(null);
+        setPhase('idle');
+      } else {
+        const combined = combineSides(frontText, backRaw);
+        const parsed = parseContact(combined);
 
-      const metadata: ScanMetadata = {
-        contactId: parsed.contact.id,
-        ocrProvider: 'external',
-        rawTextFront: frontText ?? '',
-        rawTextBack: backRaw,
-        processingMs,
-      };
+        const metadata: ScanMetadata = {
+          contactId: parsed.contact.id,
+          ocrProvider: 'external',
+          rawTextFront: frontText ?? '',
+          rawTextBack: backRaw,
+          processingMs,
+        };
 
-      const pending: Contact = {
-        ...parsed.contact,
-        source: 'both',
-        updatedAt: Date.now(),
-      };
+        const pending: Contact = {
+          ...parsed.contact,
+          source: 'both',
+          updatedAt: Date.now(),
+        };
 
-      void metadata;
-      setPendingContact(pending);
+        void metadata;
+        setPendingContact(pending);
+      }
     } catch (err) {
       setBusy(false);
       if (err instanceof Error && err.message === 'PROVIDER_NOT_CONFIGURED') return;
       const msg = err instanceof Error ? err.message : 'Error desconocido al procesar la imagen';
       Alert.alert('Error al procesar', msg);
     }
-  }
-
-  function handleRedoFront() {
-    setFrontText(null);
-    setPhase('idle');
-  }
-
-  function handleRedoBack() {
-    // Reinicia solo la cara A; conserva backText en memoria (se sobrescribe al re-capturar B).
-    setFrontText(null);
-    setPhase('idle');
   }
 
   function handleReviewConfirm(contact: Contact) {
@@ -190,6 +235,19 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     setPhase('idle');
   }
 
+  function handleFinishBatch() {
+    if (batchQueue.length === 0) return;
+    runBatch(batchQueue);
+  }
+
+  function handleClearBatch() {
+    setBatchQueue([]);
+    setBatchMode(false);
+    setFrontText(null);
+    setBackText(null);
+    setPhase('idle');
+  }
+
   const title =
     phase === 'idle'
       ? 'Capturar cara A'
@@ -205,22 +263,30 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
         <Text style={styles.phaseTitle}>{title}</Text>
 
         {phase === 'idle' && (
-          <Button title={busy ? 'Procesando...' : 'Capturar y procesar'} onPress={handleCaptureFront} />
+          <Button title={busy ? 'Procesando...' : batchMode ? 'Añadir a lote' : 'Capturar y procesar'} onPress={handleCaptureFront} />
         )}
 
         {phase === 'front-captured' && (
           <>
             <View style={styles.extractedBox}>
-              <Text style={styles.extractedLabel}>Texto cara A extraído:</Text>
+              <Text style={styles.extractedLabel}>{frontText ? 'Texto cara A extraído:' : 'Cara A capturada'}</Text>
               <Text style={styles.extractedText} numberOfLines={3}>
                 {frontText}
               </Text>
             </View>
             <View style={styles.rowActions}>
-              <Button title={busy ? 'Procesando...' : 'Capturar cara B'} onPress={handleCaptureBack} style={styles.flexButton} />
-              <Button title="Rehacer" variant="secondary" onPress={handleRedoFront} style={styles.flexButton} />
+              {batchMode ? (
+                <Button title={busy ? 'Procesando...' : 'Capturar otra'} onPress={handleCaptureFront} style={styles.flexButton} />
+              ) : (
+                <Button title={busy ? 'Procesando...' : 'Capturar cara B'} onPress={handleCaptureBack} style={styles.flexButton} />
+              )}
+              <Button title="Rehacer" variant="secondary" onPress={() => { setFrontText(null); setPhase('idle'); }} style={styles.flexButton} />
             </View>
-            <Button title="Cancelar" variant="ghost" onPress={handleCancelDoubleSide} />
+            {batchMode ? (
+              <Button title="Finalizar lote" onPress={handleFinishBatch} />
+            ) : (
+              <Button title="Cancelar" variant="ghost" onPress={handleCancelDoubleSide} />
+            )}
           </>
         )}
 
@@ -233,11 +299,18 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
               </Text>
             </View>
             <View style={styles.rowActions}>
-              <Button title="Rehacer cara A" variant="secondary" onPress={handleRedoBack} style={styles.flexButton} />
+              <Button title="Rehacer cara A" variant="secondary" onPress={() => { setFrontText(null); setPhase('idle'); }} style={styles.flexButton} />
               <Button title="Cancelar" variant="ghost" onPress={handleCancelDoubleSide} style={styles.flexButton} />
             </View>
           </>
         )}
+
+        <View style={styles.batchBar}>
+          <Button title={batchMode ? 'Lote: ON' : 'Lote: OFF'} variant="secondary" onPress={() => setBatchMode((prev) => !prev)} />
+          {batchMode && (
+            <Button title={`Limpiar (${batchQueue.length})`} variant="ghost" onPress={handleClearBatch} />
+          )}
+        </View>
       </View>
 
       <ReviewScreen
@@ -263,5 +336,6 @@ const styles = StyleSheet.create({
   extractedText: { color: palette.text, fontSize: 14, marginTop: 4 },
   rowActions: { flexDirection: 'row', gap: spacing.sm },
   flexButton: { flex: 1 },
+  batchBar: { flexDirection: 'row', gap: spacing.sm },
   flashOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#ffffff', pointerEvents: 'none' },
 });

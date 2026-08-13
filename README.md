@@ -14,7 +14,7 @@ Escanea tarjetas de visita físicas, extrae datos con IA y genera vCards listas 
 - **Tests**: 11/11 pasan (`npm run test`)
 - **Typecheck**: limpio (`npm run typecheck`)
 - **Build**: EAS preview OK, APK funcional en emulador Android
-- **Próximo hito**: `T21 — Búsqueda en historial`
+- **Próximo hito**: `T29 — Escaneo en lote mejorado`
 
 ## Qué hace hoy
 
@@ -30,8 +30,8 @@ Escanea tarjetas de visita físicas, extrae datos con IA y genera vCards listas 
 
 | Tanda | Objetivo | Estado |
 |-------|----------|--------|
-| **T21** | Búsqueda en historial | ⬜ Siguiente |
-| **T22** | Mejora de imagen previa OCR | ⬜ |
+| **T21** | Búsqueda en historial | ✅ |
+| **T22** | Mejora de imagen previa OCR | ✅ |
 | **T23** | Normalización teléfonos/idioma | ⬜ |
 | **T24** | Favoritos | ⬜ |
 
