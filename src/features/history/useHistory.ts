@@ -3,6 +3,12 @@ import { Contact } from '../../types/contact';
 import { deserializeContacts, saveContacts, STORAGE_KEYS } from '../../lib/storage';
 import storage from '../../lib/mmkv';
 
+export type FavoriteContact = Contact & { favorite: boolean };
+
+function toFavoriteContact(contact: Contact): FavoriteContact {
+  return { ...contact, favorite: Boolean((contact as unknown as Record<string, unknown>).favorite) };
+}
+
 export function useHistory() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [ready, setReady] = useState(false);
@@ -18,11 +24,14 @@ export function useHistory() {
 
   const searchContacts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) return contacts;
-    return contacts.filter((item) => {
-      const haystack = `${item.name} ${item.email ?? ''} ${item.phone ?? ''}`.toLowerCase();
-      return haystack.includes(normalized);
-    });
+    const base = normalized
+      ? contacts.filter((item) => {
+          const haystack = `${item.name} ${item.email ?? ''} ${item.phone ?? ''}`.toLowerCase();
+          return haystack.includes(normalized);
+        })
+      : contacts;
+
+    return base.map(toFavoriteContact);
   }, [contacts, query]);
 
   const add = async (contact: Contact) => {
@@ -37,5 +46,11 @@ export function useHistory() {
     await saveContacts(next);
   };
 
-  return { contacts, ready, query, setQuery, searchContacts, add, remove };
+  const toggleFavorite = async (contact: FavoriteContact) => {
+    const next = contacts.map((item) => (item.id === contact.id ? { ...item, favorite: !contact.favorite } : item));
+    setContacts(next);
+    await saveContacts(next);
+  };
+
+  return { contacts, ready, query, setQuery, searchContacts, add, remove, toggleFavorite };
 }
