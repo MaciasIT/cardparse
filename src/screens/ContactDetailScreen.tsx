@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { Alert, View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { Card, Button, palette, spacing } from '../components';
 import { Contact } from '../types/contact';
-import { shareContactVCard } from '../features/export/share';
+import { shareContactVCard, saveContactToDevice } from '../features/export/share';
 
 type Props = {
   contact: Contact;
@@ -21,6 +21,18 @@ export function ContactDetailScreen({ contact, onBack }: Props) {
 
   const faceLabel = contact.source === 'front' ? 'Cara A' : contact.source === 'back' ? 'Cara B' : 'Doble cara';
 
+  async function handleSaveToDevice() {
+    try {
+      await saveContactToDevice(contact);
+      Alert.alert('Guardado', 'Contacto guardado en la agenda del dispositivo.');
+    } catch (err) {
+      const message = err instanceof Error && err.message === 'PERMISSION_DENIED'
+        ? 'Permiso de contactos denegado. Habilítalo en Ajustes.'
+        : 'No se pudo guardar el contacto en la agenda.';
+      Alert.alert('Error', message);
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.root}>
       <Card title="Contacto" description={faceLabel}>
@@ -38,7 +50,8 @@ export function ContactDetailScreen({ contact, onBack }: Props) {
         })}
       </Card>
 
-      <Button title="Compartir vCard" onPress={() => shareContactVCard(contact)} />
+      <Button title="Guardar en agenda" onPress={handleSaveToDevice} />
+      <Button title="Compartir vCard" variant="secondary" onPress={() => shareContactVCard(contact)} />
       {!!onBack && <Button title="Volver" variant="secondary" onPress={onBack} />}
     </ScrollView>
   );

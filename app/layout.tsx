@@ -9,6 +9,7 @@ import { SettingsScreen } from '../src/screens/SettingsScreen';
 import { OnboardingScreen } from '../src/screens/OnboardingScreen';
 import storage from '../src/lib/mmkv';
 import { STORAGE_KEYS } from '../src/lib/storage';
+import { LocaleProvider } from '../src/config/LocaleContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -32,33 +33,35 @@ export default function Layout() {
   }
 
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        initialRouteName="Scanner"
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: { backgroundColor: palette.bg, borderTopColor: palette.border },
-          tabBarActiveTintColor: palette.accent,
-          tabBarInactiveTintColor: palette.muted,
-        }}
-      >
-        <Tab.Screen name="Scanner">
-          {() => <ScannerScreen />}
-        </Tab.Screen>
-        <Tab.Screen name="Historial">
-          {() => <HistoryScreen />}
-        </Tab.Screen>
-        <Tab.Screen name="Ajustes">
-          {() => <SettingsScreen onRestartOnboarding={handleRestartOnboarding} />}
-        </Tab.Screen>
-      </Tab.Navigator>
+    <LocaleProvider>
+      <NavigationContainer>
+        <Tab.Navigator
+          initialRouteName="Scanner"
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: { backgroundColor: palette.bg, borderTopColor: palette.border },
+            tabBarActiveTintColor: palette.accent,
+            tabBarInactiveTintColor: palette.muted,
+          }}
+        >
+          <Tab.Screen name="Scanner">
+            {() => <ScannerScreen />}
+          </Tab.Screen>
+          <Tab.Screen name="Historial">
+            {() => <HistoryScreen />}
+          </Tab.Screen>
+          <Tab.Screen name="Ajustes">
+            {() => <SettingsScreen onRestartOnboarding={handleRestartOnboarding} />}
+          </Tab.Screen>
+        </Tab.Navigator>
 
-      {!onboardingDone && (
-        <View style={styles.overlay}>
-          <OnboardingScreen onFinish={() => setOnboardingDone(true)} />
-        </View>
-      )}
-    </NavigationContainer>
+        {!onboardingDone && (
+          <View style={styles.overlay}>
+            <OnboardingScreen onFinish={() => setOnboardingDone(true)} />
+          </View>
+        )}
+      </NavigationContainer>
+    </LocaleProvider>
   );
 }
 

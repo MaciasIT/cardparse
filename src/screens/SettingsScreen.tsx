@@ -4,6 +4,7 @@ import { palette, spacing } from '../components';
 import { Button, Input } from '../components';
 import { loadProviderConfig, saveProviderConfig } from '../lib/storage';
 import { ProviderConfig } from '../types/contact';
+import { useLocale, SupportedLocale } from '../config/useLocale';
 
 type SettingRowProps = {
   label: string;
@@ -46,7 +47,6 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
   const [config, setConfig] = useState<ProviderConfig | null>(null);
   const [loaded, setLoaded] = useState(false);
 
-  // Form state
   const [editing, setEditing] = useState(false);
   const [endpoint, setEndpoint] = useState('');
   const [model, setModel] = useState('');
@@ -54,6 +54,9 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
   const [enabled, setEnabled] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<number | undefined>(undefined);
+  const [locale, setLocale] = useState<SupportedLocale>('es');
+
+  const { t, ready } = useLocale();
 
   useEffect(() => {
     (async () => {
@@ -88,7 +91,7 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
 
   const save = useCallback(async () => {
     if (!endpoint.trim() || !model.trim() || !apiKey.trim()) {
-      setError('Endpoint, modelo y API key son obligatorios.');
+      setError(t('settings_required_fields'));
       return;
     }
     const next: ProviderConfig = {
@@ -105,7 +108,7 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
     setLastSaved(next.updatedAt);
     setError(null);
     setEditing(false);
-  }, [config, endpoint, model, apiKey, enabled]);
+  }, [config, endpoint, model, apiKey, enabled, t]);
 
   const toggleEnabled = useCallback(
     async (value: boolean) => {
@@ -120,29 +123,41 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
     [config],
   );
 
+  const changeLocale = useCallback(async (next: SupportedLocale) => {
+    setLocale(next);
+    // Runtime-only for now; persistence hook could be added later without changing the UI path.
+  }, []);
+
   const configured = !!config && !!config.endpoint && !!config.model && !!config.apiKey;
+
+  if (!ready) {
+    return (
+      <View style={styles.root}>
+        <Text style={styles.title}>{t('settings_title')}</Text>
+        <Text style={styles.description}>{t('settings_loading')}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
-      <Text style={styles.title}>Ajustes</Text>
+      <Text style={styles.title}>{t('settings_title')}</Text>
 
       <View style={styles.card}>
-        <Text style={styles.sectionLabel}>Proveedor OCR</Text>
+        <Text style={styles.sectionLabel}>{t('settings_ocr_provider')}</Text>
 
         {!loaded ? (
-          <Text style={styles.description}>Cargando…</Text>
+          <Text style={styles.description}>{t('settings_loading')}</Text>
         ) : !configured && !editing ? (
-          <>
-            <SettingRow
-              label="Proveedor no configurado"
-              description="Endpoint, modelo y API key necesarios para el OCR real"
-              action="Configurar"
-              onPress={startEdit}
-            />
-          </>
+          <SettingRow
+            label={t('settings_not_configured')}
+            description={t('settings_not_configured_desc')}
+            action={t('settings_configure')}
+            onPress={startEdit}
+          />
         ) : editing ? (
           <>
-            <Text style={styles.fieldLabel}>Endpoint</Text>
+            <Text style={styles.fieldLabel}>{t('settings_endpoint')}</Text>
             <Input
               value={endpoint}
               onChangeText={setEndpoint}
@@ -151,7 +166,7 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
               autoCorrect={false}
               keyboardType="url"
             />
-            <Text style={styles.fieldLabel}>Modelo</Text>
+            <Text style={styles.fieldLabel}>{t('settings_model')}</Text>
             <Input
               value={model}
               onChangeText={setModel}
@@ -159,7 +174,7 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
               autoCapitalize="none"
               autoCorrect={false}
             />
-            <Text style={styles.fieldLabel}>API key</Text>
+            <Text style={styles.fieldLabel}>{t('settings_api_key')}</Text>
             <Input
               value={apiKey}
               onChangeText={setApiKey}
@@ -170,24 +185,24 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
             />
             {!!error && <Text style={styles.error}>{error}</Text>}
             <View style={styles.actions}>
-              <Button title="Guardar" onPress={save} />
-              <Button title="Cancelar" variant="secondary" onPress={cancelEdit} />
+              <Button title={t('settings_save')} onPress={save} />
+              <Button title={t('review_cancel')} variant="secondary" onPress={cancelEdit} />
             </View>
           </>
         ) : configured && config ? (
           <>
-            <SettingRow label="Endpoint" description={config.endpoint} />
-            <SettingRow label="Modelo" description={config.model} />
+            <SettingRow label={t('settings_endpoint')} description={config.endpoint} />
+            <SettingRow label={t('settings_model')} description={config.model} />
             <SettingRow
-              label="API key"
+              label={t('settings_api_key')}
               description={maskApiKey(config.apiKey ?? '')}
-              action="Editar"
+              action={t('settings_edit')}
               onPress={startEdit}
             />
             <View style={styles.row}>
               <View style={styles.textGroup}>
-                <Text style={styles.label}>Proveedor activo</Text>
-                <Text style={styles.description}>{enabled ? 'Activo' : 'Desactivado'}</Text>
+                <Text style={styles.label}>{t('settings_enabled_on')}</Text>
+                <Text style={styles.description}>{enabled ? t('settings_enabled_on') : t('settings_enabled_off')}</Text>
               </View>
               <Switch
                 value={enabled}
@@ -197,28 +212,40 @@ export function SettingsScreen({ onRestartOnboarding }: { onRestartOnboarding?: 
               />
             </View>
             {!!lastSaved && (
-              <Text style={styles.lastSaved}>Última guardada: {formatLastSaved(lastSaved)}</Text>
+              <Text style={styles.lastSaved}>{t('settings_last_saved', formatLastSaved(lastSaved) ?? '')}</Text>
             )}
           </>
         ) : null}
       </View>
 
       <View style={styles.card}>
-        <SettingRow label="Cámara" description="Permiso para escanear tarjetas" action="Conceder" />
-        <SettingRow label="Contactos" description="Permiso para guardar contactos" action="Conceder" />
+        <Text style={styles.sectionLabel}>{t('settings_language')}</Text>
+        <View style={styles.row}>
+          <SettingRow
+            label={t('settings_language_es')}
+            description={t('settings_language_desc', locale)}
+            action={locale === 'es' ? '✓' : undefined}
+            onPress={() => changeLocale('es')}
+          />
+          <SettingRow
+            label={t('settings_language_en')}
+            description={t('settings_language_desc', locale)}
+            action={locale === 'en' ? '✓' : undefined}
+            onPress={() => changeLocale('en')}
+          />
+        </View>
+        <SettingRow label={t('settings_camera')} description={t('settings_camera_desc')} action={t('settings_configure')} />
+        <SettingRow label={t('settings_contacts')} description={t('settings_contacts_desc')} action={t('settings_configure')} />
         <SettingRow
-          label="Onboarding"
-          description="Repetir la introducción"
-          action="Reiniciar"
+          label={t('settings_onboarding')}
+          description={t('settings_onboarding_desc')}
+          action={t('settings_restart')}
           onPress={onRestartOnboarding}
         />
-        <SettingRow label="Versión" description="CardParse MVP" action="0.1.0" />
+        <SettingRow label={t('settings_version')} description="CardParse MVP" action="0.1.0" />
       </View>
 
-      <Text style={styles.help}>
-        CardParse funciona en local sin cuenta ni conexión obligatoria. El OCR real solo se envía al
-        proveedor que configures; los contactos se guardan en el dispositivo.
-      </Text>
+      <Text style={styles.help}>{t('settings_help')}</Text>
     </View>
   );
 }
