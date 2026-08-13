@@ -55,7 +55,7 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 | # | Tanda | Descripción | HU |
 |---|-------|-------------|----|
-| **T29** ⬜ | **Escaneo en lote mejorado** | Cola de capturas con progreso y reintentos. | HU-15b |
+| **T29** ✅ | `faa4bd8` | Cola persistente, progreso y reintentos en Scanner. | HU-15b |
 
 ### 🥉 Prioridad Baja — Post-MVP
 
@@ -73,4 +73,4 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ## Próximo paso
 
-**T29 — Escaneo en lote mejorado:** cola de capturas con progreso y reintentos (HU-15b). 🎯 Siguiente tanda
+**Próximo hito pendiente tras T29.
