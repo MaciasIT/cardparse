@@ -3,18 +3,18 @@
 [![Expo](https://img.shields.io/badge/Expo-SDK_52-000020?logo=expo)](https://expo.dev/)
 [![React Native](https://img.shields.io/badge/React_Native-0.76.6-61DAFB?logo=react)](https://reactnative.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-4%2F4_green-success)](#)
+[![Tests](https://img.shields.io/badge/Tests-11%2F11_green-success)](#)
 
 Escanea tarjetas de visita físicas, extrae datos con IA y genera vCards listas para importar en la agenda del dispositivo.
 
 ## Estado del proyecto
 
-- **Último commit**: `dd03e19` en `main`
-- **Tandas completadas**: T1–T20
+- **Último commit**: `faa4bd8` en `main`
+- **Tandas completadas**: T1–T29
 - **Tests**: 11/11 pasan (`npm run test`)
 - **Typecheck**: limpio (`npm run typecheck`)
 - **Build**: EAS preview OK, APK funcional en emulador Android
-- **Próximo hito**: próxima tanda post-T29
+- **Próximo hito**: definir siguiente tanda priorizada
 
 ## Qué hace hoy
 
@@ -25,15 +25,15 @@ Escanea tarjetas de visita físicas, extrae datos con IA y genera vCards listas 
 - Detalle de contacto con acciones nativas
 - Export/compartir vía contactos y share nativo
 - Onboarding y ajustes funcionales
+- Idioma ES/EN persistente
+- Guardado en agenda del dispositivo
+- Lote de escaneo con cola, progreso y reintentos
 
 ## Qué falta para MVP real
 
 | Tanda | Objetivo | Estado |
 |-------|----------|--------|
-| **T21** | Búsqueda en historial | ✅ |
-| **T22** | Mejora de imagen previa OCR | ✅ |
-| **T23** | Normalización teléfonos/idioma | ⬜ |
-| **T24** | Favoritos | ⬜ |
+| Definir T30 | Siguiente feature priorizada | ⬜ |
 
 ## Stack
 
@@ -58,6 +58,7 @@ src/
   components/
   config/
   features/
+    batch/
     export/
     history/
     parser/
