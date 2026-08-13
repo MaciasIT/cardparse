@@ -1,6 +1,7 @@
 import { Contact } from '../../types/contact';
 
 export function buildVCard(contact: Contact): string {
+  const photo = contact.logoUri ? `PHOTO;VALUE=uri:${escape(contact.logoUri)}` : null;
   const lines = [
     'BEGIN:VCARD',
     'VERSION:3.0',
@@ -10,6 +11,7 @@ export function buildVCard(contact: Contact): string {
     contact.phone ? `TEL:${escape(contact.phone)}` : null,
     contact.website ? `URL:${escape(contact.website)}` : null,
     contact.note ? `NOTE:${escape(contact.note)}` : null,
+    photo,
     'END:VCARD',
   ]
     .filter(Boolean)

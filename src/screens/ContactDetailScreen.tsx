@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { Card, Button, palette, spacing } from '../components';
 import { Contact } from '../types/contact';
 import { shareContactVCard } from '../features/export/share';
@@ -24,6 +24,9 @@ export function ContactDetailScreen({ contact, onBack }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.root}>
       <Card title="Contacto" description={faceLabel}>
+        {contact.logoUri ? (
+          <Image source={{ uri: contact.logoUri }} style={styles.logo} resizeMode="contain" />
+        ) : null}
         {rows.map(([label, value]) => {
           if (!value) return null;
           return (
@@ -46,4 +49,5 @@ const styles = StyleSheet.create({
   row: { gap: 4 },
   label: { color: palette.muted, fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
   value: { color: palette.text, fontSize: 15 },
+  logo: { width: '100%', height: 160, borderRadius: 12, marginBottom: spacing.sm, backgroundColor: palette.border },
 });

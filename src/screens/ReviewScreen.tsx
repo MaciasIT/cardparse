@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Modal, View, Text, TextInput, Pressable, StyleSheet, Image } from 'react-native';
 import { Button, palette, spacing } from '../components';
 import type { Contact } from '../types/contact';
 
@@ -45,6 +45,10 @@ export function ReviewScreen({ contact, visible, onConfirm, onCancel, onShare }:
       <View style={styles.root}>
         <Text style={styles.title}>Revisar contacto</Text>
 
+        {form.logoUri ? (
+          <Image source={{ uri: form.logoUri }} style={styles.logo} resizeMode="contain" />
+        ) : null}
+
         <Field label="Nombre" value={form.name} onChangeText={(text) => update('name', text)} />
         <Field label="Empresa" value={form.company} onChangeText={(text) => update('company', text)} autoCapitalize="words" />
         <Field label="Teléfono" value={form.phone} onChangeText={(text) => update('phone', text)} keyboardType="phone-pad" />
@@ -88,6 +92,7 @@ function Field({ label, value, onChangeText, ...textInputProps }: { label: strin
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: palette.bg, padding: spacing.md, gap: spacing.md },
   title: { color: palette.text, fontSize: 22, fontWeight: '700' },
+  logo: { width: '100%', height: 160, borderRadius: 12, marginBottom: spacing.sm, backgroundColor: palette.border },
   field: { gap: 4 },
   label: { color: palette.muted, fontSize: 12, textTransform: 'uppercase', fontWeight: '600' },
   input: { color: palette.text, borderWidth: 1, borderColor: palette.border, borderRadius: 12, padding: spacing.sm },
