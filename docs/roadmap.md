@@ -1,6 +1,6 @@
 # CardParse — Roadmap de Desarrollo
 
-> Actualizado: 25 julio 2026
+> Actualizado: 13 agosto 2026
 > Formato: Tandas → cada tanda = commit atómico con sentido propio
 
 ---
@@ -57,14 +57,6 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 |---|-------|-------------|----|
 | **T21** ⬜ | **Búsqueda en historial** | Barra de búsqueda/filtro en el historial. | HU-10 |
 
-### 🥈 Prioridad Media — Mejoras MVP
-
-| # | Tanda | Descripción | HU |
-|---|-------|-------------|----|
-| **T19** ⬜ | **Recorte automático** | Detectar bordes de la tarjeta en la imagen y recortar antes de enviar a OCR. | HU-02 |
-| **T20** ⬜ | **Onboarding completo** | Tercera pantalla de onboarding (tutorial de doble cara). | HU-13 |
-| **T21** ⬜ | **Búsqueda en historial** | Barra de búsqueda/filtro en el historial. | HU-10 |
-
 ### 🥉 Prioridad Baja — Post-MVP
 
 | # | Tanda | Descripción | HU |
@@ -81,4 +73,4 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ## Próximo paso
 
-**T21 — Búsqueda en historial:** barra de búsqueda/filtro en el historial (HU-10).
+**T21 — Búsqueda en historial:** barra de búsqueda/filtro en el historial (HU-10). 🎯 Siguiente tanda

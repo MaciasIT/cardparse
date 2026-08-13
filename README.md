@@ -9,12 +9,12 @@ Escanea tarjetas de visita físicas, extrae datos con IA y genera vCards listas 
 
 ## Estado del proyecto
 
-- **Último commit**: `941b0c3` en `main`
-- **Tandas completadas**: T1–T13
-- **Tests**: 4/4 pasan (`npm run test`)
+- **Último commit**: `dd03e19` en `main`
+- **Tandas completadas**: T1–T20
+- **Tests**: 11/11 pasan (`npm run test`)
 - **Typecheck**: limpio (`npm run typecheck`)
 - **Build**: EAS preview OK, APK funcional en emulador Android
-- **Próximo hito**: `T14 — OCR real`
+- **Próximo hito**: `T21 — Búsqueda en historial`
 
 ## Qué hace hoy
 
@@ -30,10 +30,10 @@ Escanea tarjetas de visita físicas, extrae datos con IA y genera vCards listas 
 
 | Tanda | Objetivo | Estado |
 |-------|----------|--------|
-| **T14** | OCR real conectado a API | ⬜ Siguiente |
-| **T15** | Edición manual antes de guardar | ⬜ |
-| **T16** | Doble cara de tarjeta | ⬜ |
-| **T17** | Compartir sin guardar | ⬜ |
+| **T21** | Búsqueda en historial | ⬜ Siguiente |
+| **T22** | Mejora de imagen previa OCR | ⬜ |
+| **T23** | Normalización teléfonos/idioma | ⬜ |
+| **T24** | Favoritos | ⬜ |
 
 ## Stack
 
