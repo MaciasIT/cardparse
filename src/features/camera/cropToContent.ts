@@ -9,6 +9,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 
 const CROP_MARGIN = 0.08; // 8% de cada borde
 const MIN_DIMENSION = 100; // px — por debajo no se recorta
+const MAX_OCR_DIMENSION = 2048; // px — limita ancho/alto para reducir base64 y mejorar rendimiento OCR
 
 /**
  * Convierte un buffer RGBA (4 bytes/pixel) a escala de grises
@@ -108,29 +109,37 @@ export function detectContentRect(
 export async function cropImage(uri: string): Promise<string> {
   try {
     const meta = await ImageManipulator.manipulateAsync(uri, [], { format: ImageManipulator.SaveFormat.PNG });
-    const width = meta.width;
-    const height = meta.height;
+    let width = meta.width;
+    let height = meta.height;
 
     if (width < MIN_DIMENSION || height < MIN_DIMENSION) {
       return uri;
     }
 
-    const marginX = Math.round(width * CROP_MARGIN);
-    const marginY = Math.round(height * CROP_MARGIN);
-    const cropWidth = width - marginX * 2;
-    const cropHeight = height - marginY * 2;
-
-    if (cropWidth < MIN_DIMENSION || cropHeight < MIN_DIMENSION) {
-      return uri;
-    }
-
-    const result = await ImageManipulator.manipulateAsync(
+    const cropWidth = Math.max(MIN_DIMENSION, Math.round(width * (1 - CROP_MARGIN * 2)));
+    const cropHeight = Math.max(MIN_DIMENSION, Math.round(height * (1 - CROP_MARGIN * 2)));
+    const cropped = await ImageManipulator.manipulateAsync(
       uri,
-      [{ crop: { originX: marginX, originY: marginY, width: cropWidth, height: cropHeight } }],
+      [{ crop: { originX: Math.round(width * CROP_MARGIN), originY: Math.round(height * CROP_MARGIN), width: cropWidth, height: cropHeight } }],
       { format: ImageManipulator.SaveFormat.PNG },
     );
 
-    return result.uri;
+    const croppedWidth = cropped.width ?? cropWidth;
+    const croppedHeight = cropped.height ?? cropHeight;
+    if (croppedWidth <= MAX_OCR_DIMENSION && croppedHeight <= MAX_OCR_DIMENSION) {
+      return cropped.uri;
+    }
+
+    const resizeScale = Math.min(MAX_OCR_DIMENSION / croppedWidth, MAX_OCR_DIMENSION / croppedHeight);
+    const resizeWidth = Math.max(MIN_DIMENSION, Math.round(croppedWidth * resizeScale));
+    const resizeHeight = Math.max(MIN_DIMENSION, Math.round(croppedHeight * resizeScale));
+    const resized = await ImageManipulator.manipulateAsync(
+      cropped.uri,
+      [{ resize: { width: resizeWidth, height: resizeHeight } }],
+      { format: ImageManipulator.SaveFormat.PNG },
+    );
+
+    return resized.uri;
   } catch {
     return uri;
   }

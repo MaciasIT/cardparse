@@ -120,7 +120,7 @@ describe('cropImage', () => {
         originX: Math.round(640 * 0.08),
         originY: Math.round(480 * 0.08),
         width: 640 - Math.round(640 * 0.08) * 2,
-        height: 480 - Math.round(480 * 0.08) * 2,
+        height: Math.max(100, Math.round(480 * (1 - 0.08 * 2))),
       },
     });
   });
