@@ -44,8 +44,17 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 | **T16** ✅ | `228f92a` | Configuración visible del proveedor OCR en Ajustes (endpoint, modelo, API key enmascarada, toggle activo) | HU-01, HU-04 |
 | **T17** ✅ | `ce01014` | Escaneo de doble cara: Cara A → Cara B → Review unificado (`combineSides`) | HU-01b |
 | **T18** ✅ | `f5abe6c` | Compartir sin guardar desde la Review (`shareContactVCard` sin pasar por historial) | HU-08 |
-| **T19** ✅ | `53996f4` | Recorte automático de bordes antes de OCR (margen 8% vía expo-image-manipulator) | HU-02 |
+| **T19** ✅ | `53996f4` | Recorte automático de bordes antes del OCR (margen 8% vía expo-image-manipulator) | HU-02 |
 | **T20** ✅ | `606492f` | Onboarding completo: 3 pasos (intro, guardar/compartir, doble cara) + montaje en arranque + reinicio desde Ajustes | HU-13 |
+| **T21** ✅ | `1d5d3f5` | Búsqueda en historial | HU-10 |
+| **T22** ✅ | `a4de5bf` | Mejora de imagen previa OCR (recorte + resize) | HU-03 |
+| **T23** ✅ | `0f25b12` | Normalización teléfonos/idioma y favoritos | HU-06, HU-11 |
+| **T24** ✅ | `0f25b12` | Favoritos | HU-11 |
+| **T25** ✅ | `7168716` | Soporte de logoUri en detalle, review y vCard | HU-01c |
+| **T26** ✅ | `d7171ee` | Guardado en agenda del dispositivo | HU-09 |
+| **T27** ✅ | `d7171ee` | Cambio idioma ES/EN | HU-14 |
+| **T28** ✅ | `957f776` | Escaneo en lote en Scanner | HU-15 |
+| **T29** ✅ | `faa4bd8` | Escaneo en lote mejorado: cola persistente, progreso y reintentos | HU-15b |
 
 ---
 
@@ -53,24 +62,14 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ### 🥇 Prioridad Alta — MVP funcional real
 
-| # | Tanda | Descripción | HU |
-|---|-------|-------------|----|
-| **T29** ✅ | `faa4bd8` | Cola persistente, progreso y reintentos en Scanner. | HU-15b |
+_No hay tandas pendientes en este nivel._
 
 ### 🥉 Prioridad Baja — Post-MVP
 
-| # | Tanda | Descripción | HU |
-|---|-------|-------------|----|
-| **T22** ⬜ | Mejora de imagen previa OCR | HU-03 |
-| **T23** ⬜ | Normalización teléfonos/idioma | HU-06 |
-| **T24** ⬜ | Favoritos | HU-11 |
-| **T25** ⬜ | Detección de logo | HU-01c |
-| **T26** ⬜ | Guardado en agenda del dispositivo | HU-09 |
-| **T27** ⬜ | Cambio idioma ES/EN | HU-14 |
-| **T28** ⬜ | Escaneo en lote | HU-15 |
+_No hay tandas pendientes definidas._
 
 ---
 
 ## Próximo paso
 
-**Próximo hito pendiente tras T29.
+**Definir siguiente tanda priorizada:** retomar backlog de HU o feature request concreto para crear T30.
