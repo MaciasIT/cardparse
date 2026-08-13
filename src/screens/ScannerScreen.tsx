@@ -11,6 +11,7 @@ import { combineSides } from '../features/parser/combineSides';
 import { cropImage } from '../features/camera/cropToContent';
 import { ReviewScreen } from './ReviewScreen';
 import { shareContactVCard } from '../features/export/share';
+import { useBatchQueue } from '../features/batch/useBatchQueue';
 import type { Contact, ScanMetadata } from '../types/contact';
 
 export type ScannerScreenProps = {
@@ -18,7 +19,6 @@ export type ScannerScreenProps = {
 };
 
 type ScanPhase = 'idle' | 'front-captured' | 'back-captured';
-type BatchItem = { uri: string; rawText: string };
 
 async function readImageAsBase64(uri: string): Promise<string> {
   const response = await fetch(uri);
@@ -41,9 +41,8 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   const [frontText, setFrontText] = useState<string | null>(null);
   const [backText, setBackText] = useState<string | null>(null);
   const [pendingContact, setPendingContact] = useState<Contact | null>(null);
-  const [batchMode, setBatchMode] = useState(false);
-  const [batchQueue, setBatchQueue] = useState<BatchItem[]>([]);
-  const [batchSaving, setBatchSaving] = useState(false);
+  const batch = useBatchQueue();
+  const batchMode = batch.items.length > 0 || batch.summary.total > 0;
 
   if (!permission) {
     return (
@@ -96,44 +95,8 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     return { rawText: providerResponse.rawText, processingMs: result.processingMs };
   }
 
-  async function processBatchItem(uri: string): Promise<BatchItem> {
-    const { rawText } = await processImage(uri);
-    return { uri, rawText };
-  }
-
-  async function runBatch(items: BatchItem[]) {
-    setBatchSaving(true);
-    for (const item of items) {
-      const combined = combineSides(item.rawText, '');
-      const parsed = parseContact(combined);
-
-      const pending: Contact = {
-        ...parsed.contact,
-        source: 'front',
-        updatedAt: Date.now(),
-      };
-
-      setPendingContact(pending);
-      await new Promise<void>((resolve) => {
-        const timeout = setTimeout(resolve, 300);
-        const check = () => {
-          if (!pendingContact) {
-            clearTimeout(timeout);
-            resolve();
-            return;
-          }
-          setTimeout(check, 100);
-        };
-        check();
-      });
-    }
-    setBatchQueue([]);
-    setBatchSaving(false);
-    setBatchMode(false);
-  }
-
   async function handleCaptureFront() {
-    if (busy || batchSaving) return;
+    if (busy) return;
     setBusy(true);
 
     try {
@@ -143,17 +106,10 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
         return;
       }
 
-      if (batchMode) {
-        const item = await processBatchItem(photo.uri);
-        setBatchQueue((prev) => [...prev, item]);
-        setFrontText(item.rawText);
-        setPhase('front-captured');
-      } else {
-        const { rawText } = await processImage(photo.uri);
-        setFrontText(rawText);
-        setPhase('front-captured');
-      }
-
+      const { rawText } = await processImage(photo.uri);
+      setFrontText(rawText);
+      setPhase('front-captured');
+      await batch.enqueue({ uri: photo.uri, rawText });
       setBusy(false);
       onCapture?.(photo.uri);
     } catch (err) {
@@ -165,7 +121,7 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   }
 
   async function handleCaptureBack() {
-    if (busy || batchSaving) return;
+    if (busy) return;
     setBusy(true);
 
     try {
@@ -181,34 +137,25 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
       setBusy(false);
       onCapture?.(photo.uri);
 
-      if (batchMode) {
-        const frontRaw = frontText ?? '';
-        const item: BatchItem = { uri: photo.uri, rawText: combineSides(frontRaw, backRaw) };
-        setBatchQueue((prev) => [...prev, item]);
-        setFrontText(null);
-        setBackText(null);
-        setPhase('idle');
-      } else {
-        const combined = combineSides(frontText, backRaw);
-        const parsed = parseContact(combined);
+      const combined = combineSides(frontText, backRaw);
+      const parsed = parseContact(combined);
 
-        const metadata: ScanMetadata = {
-          contactId: parsed.contact.id,
-          ocrProvider: 'external',
-          rawTextFront: frontText ?? '',
-          rawTextBack: backRaw,
-          processingMs,
-        };
+      const metadata: ScanMetadata = {
+        contactId: parsed.contact.id,
+        ocrProvider: 'external',
+        rawTextFront: frontText ?? '',
+        rawTextBack: backRaw,
+        processingMs,
+      };
 
-        const pending: Contact = {
-          ...parsed.contact,
-          source: 'both',
-          updatedAt: Date.now(),
-        };
+      const pending: Contact = {
+        ...parsed.contact,
+        source: 'both',
+        updatedAt: Date.now(),
+      };
 
-        void metadata;
-        setPendingContact(pending);
-      }
+      void metadata;
+      setPendingContact(pending);
     } catch (err) {
       setBusy(false);
       if (err instanceof Error && err.message === 'PROVIDER_NOT_CONFIGURED') return;
@@ -235,19 +182,6 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     setPhase('idle');
   }
 
-  function handleFinishBatch() {
-    if (batchQueue.length === 0) return;
-    runBatch(batchQueue);
-  }
-
-  function handleClearBatch() {
-    setBatchQueue([]);
-    setBatchMode(false);
-    setFrontText(null);
-    setBackText(null);
-    setPhase('idle');
-  }
-
   const title =
     phase === 'idle'
       ? 'Capturar cara A'
@@ -263,7 +197,7 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
         <Text style={styles.phaseTitle}>{title}</Text>
 
         {phase === 'idle' && (
-          <Button title={busy ? 'Procesando...' : batchMode ? 'Añadir a lote' : 'Capturar y procesar'} onPress={handleCaptureFront} />
+          <Button title={busy ? 'Procesando...' : 'Capturar y procesar'} onPress={handleCaptureFront} />
         )}
 
         {phase === 'front-captured' && (
@@ -275,18 +209,10 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
               </Text>
             </View>
             <View style={styles.rowActions}>
-              {batchMode ? (
-                <Button title={busy ? 'Procesando...' : 'Capturar otra'} onPress={handleCaptureFront} style={styles.flexButton} />
-              ) : (
-                <Button title={busy ? 'Procesando...' : 'Capturar cara B'} onPress={handleCaptureBack} style={styles.flexButton} />
-              )}
+              <Button title={busy ? 'Procesando...' : 'Capturar cara B'} onPress={handleCaptureBack} style={styles.flexButton} />
               <Button title="Rehacer" variant="secondary" onPress={() => { setFrontText(null); setPhase('idle'); }} style={styles.flexButton} />
             </View>
-            {batchMode ? (
-              <Button title="Finalizar lote" onPress={handleFinishBatch} />
-            ) : (
-              <Button title="Cancelar" variant="ghost" onPress={handleCancelDoubleSide} />
-            )}
+            <Button title="Cancelar" variant="ghost" onPress={handleCancelDoubleSide} />
           </>
         )}
 
@@ -306,10 +232,13 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
         )}
 
         <View style={styles.batchBar}>
-          <Button title={batchMode ? 'Lote: ON' : 'Lote: OFF'} variant="secondary" onPress={() => setBatchMode((prev) => !prev)} />
-          {batchMode && (
-            <Button title={`Limpiar (${batchQueue.length})`} variant="ghost" onPress={handleClearBatch} />
-          )}
+          <Text style={styles.batchStatus}>
+            Lote: {batch.summary.total} · pendientes {batch.summary.pending} · errores {batch.summary.failed}
+          </Text>
+          <View style={styles.rowActions}>
+            <Button title="Reintentar errores" variant="secondary" onPress={batch.runAll} style={styles.flexButton} />
+            <Button title="Limpiar lote" variant="ghost" onPress={batch.clear} style={styles.flexButton} />
+          </View>
         </View>
       </View>
 
@@ -336,6 +265,7 @@ const styles = StyleSheet.create({
   extractedText: { color: palette.text, fontSize: 14, marginTop: 4 },
   rowActions: { flexDirection: 'row', gap: spacing.sm },
   flexButton: { flex: 1 },
-  batchBar: { flexDirection: 'row', gap: spacing.sm },
+  batchBar: { gap: spacing.sm },
+  batchStatus: { color: palette.muted, fontSize: 12, textAlign: 'center' },
   flashOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#ffffff', pointerEvents: 'none' },
 });

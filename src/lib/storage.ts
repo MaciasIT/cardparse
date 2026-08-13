@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
   provider: '@cardparse/provider',
   appConfig: '@cardparse/app-config',
   onboarding: '@cardparse/onboarding/done',
+  batchQueue: '@cardparse/batch-queue',
 } as const;
 
 export function serializeContacts(contacts: Contact[]): string {
