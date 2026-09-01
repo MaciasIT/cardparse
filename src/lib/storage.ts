@@ -15,7 +15,21 @@ export const STORAGE_KEYS = {
   appConfig: '@cardparse/app-config',
   onboarding: '@cardparse/onboarding/done',
   batchQueue: '@cardparse/batch-queue',
+  activeScanId: '@cardparse/active-scan-id',
 } as const;
+
+export async function saveActiveScanId(id: string | null): Promise<void> {
+  if (!id) {
+    await AsyncStorage.removeItem(STORAGE_KEYS.activeScanId);
+    return;
+  }
+  await AsyncStorage.setItem(STORAGE_KEYS.activeScanId, id);
+}
+
+export async function loadActiveScanId(): Promise<string | null> {
+  const raw = await AsyncStorage.getItem(STORAGE_KEYS.activeScanId);
+  return raw ?? null;
+}
 
 export function serializeContacts(contacts: Contact[]): string {
   return JSON.stringify(contacts);
