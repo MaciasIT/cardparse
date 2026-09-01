@@ -54,7 +54,8 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 | **T26** ✅ | `d7171ee` | Guardado en agenda del dispositivo | HU-09 |
 | **T27** ✅ | `d7171ee` | Cambio idioma ES/EN | HU-14 |
 | **T28** ✅ | `957f776` | Escaneo en lote en Scanner | HU-15 |
-| **T29** ✅ | `faa4bd8` | Escaneo en lote mejorado: cola persistente, progreso y reintentos | HU-15b |
+|| **T29** ✅ | `faa4bd8` | Escaneo en lote mejorado: cola persistente, progreso y reintentos | HU-15b |
+|| **T30** ⬜ | — | Batch robusto: recuperación de estado, reintentos con backoff, export directo por item | — |
 
 ---
 
@@ -62,7 +63,9 @@ Backlog de 15 HU aprobado, arquitectura definida, marketing aligned.
 
 ### 🥇 Prioridad Alta — MVP funcional real
 
-_No hay tandas pendientes en este nivel._
+|| Tanda | Objetivo | Estado |
+|-------|----------|--------|
+| **T30** | Batch robusto: recuperación de estado, reintentos con backoff, export directo por item | ⬜ |
 
 ### 🥉 Prioridad Baja — Post-MVP
 
@@ -72,4 +75,4 @@ _No hay tandas pendientes definidas._
 
 ## Próximo paso
 
-**Definir siguiente tanda priorizada:** retomar backlog de HU o feature request concreto para crear T30.
+**Ejecutar T30** en rama `feat/t30-batch-robusto`.

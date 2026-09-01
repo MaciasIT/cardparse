@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Alert, Animated, StyleSheet, Text, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { palette, spacing } from '../config/theme';
 import { Button } from '../components';
-import { loadProviderConfig } from '../lib/storage';
+import { loadProviderConfig, saveActiveScanId, loadActiveScanId } from '../lib/storage';
 import { normalizeOcrResponse } from '../features/ocr/normalizeOcrResponse';
 import { OcrService } from '../features/ocr/ocrService';
 import { parseContact } from '../features/parser/contactParser';
@@ -42,7 +42,27 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   const [backText, setBackText] = useState<string | null>(null);
   const [pendingContact, setPendingContact] = useState<Contact | null>(null);
   const batch = useBatchQueue();
-  const batchMode = batch.items.length > 0 || batch.summary.total > 0;
+  const [recovered, setRecovered] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const activeId = await loadActiveScanId();
+      if (!activeId) return;
+      const active = batch.items.find((item) => item.id === activeId);
+      if (!active) return;
+
+      if (active.status === 'review' && active.contact) {
+        setPendingContact(active.contact);
+        setPhase('back-captured');
+        setFrontText(active.rawTextFront ?? '');
+        setBackText(active.rawTextBack ?? '');
+      } else if (active.status === 'processing') {
+        setPhase('front-captured');
+        setFrontText(active.rawTextFront ?? '');
+      }
+      setRecovered(true);
+    })();
+  }, []);
 
   if (!permission) {
     return (
@@ -109,7 +129,8 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
       const { rawText } = await processImage(photo.uri);
       setFrontText(rawText);
       setPhase('front-captured');
-      await batch.enqueue({ uri: photo.uri, rawText });
+      const newItemId = await batch.enqueue({ uri: photo.uri, rawText });
+      await batch.updateItem(newItemId, { rawTextFront: rawText });
       setBusy(false);
       onCapture?.(photo.uri);
     } catch (err) {
@@ -155,6 +176,12 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
       };
 
       void metadata;
+      const current = batch.items.find((item) => item.status === 'processing' || item.status === 'capturing');
+      const itemId = current?.id ?? batch.items[batch.items.length - 1]?.id;
+      if (itemId) {
+        await batch.updateItem(itemId, { rawTextBack: backRaw, contact: pending });
+        await saveActiveScanId(itemId);
+      }
       setPendingContact(pending);
     } catch (err) {
       setBusy(false);
@@ -164,19 +191,37 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     }
   }
 
-  function handleReviewConfirm(contact: Contact) {
+  async function markCurrentDone() {
+    const current = batch.items.find((item) => item.status === 'review' || item.status === 'processing');
+    if (current) {
+      await batch.updateItem(current.id, { status: 'done', contact: pendingContact ?? current.contact });
+    }
+    await saveActiveScanId(null);
     setPendingContact(null);
     setFrontText(null);
     setBackText(null);
     setPhase('idle');
+    const next = batch.items.find((item) => item.status === 'error' || item.status === 'capturing');
+    if (next) {
+      Alert.alert('Contacto confirmado', 'Continuando con el siguiente item del lote.');
+    }
+  }
+
+  function handleReviewConfirm(contact: Contact) {
+    markCurrentDone();
     Alert.alert('Contacto confirmado', contact.name || 'Sin nombre');
   }
 
   function handleReviewCancel() {
+    saveActiveScanId(null);
     setPendingContact(null);
+    setFrontText(null);
+    setBackText(null);
+    setPhase('idle');
   }
 
   function handleCancelDoubleSide() {
+    saveActiveScanId(null);
     setFrontText(null);
     setBackText(null);
     setPhase('idle');
@@ -188,6 +233,9 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
       : phase === 'front-captured'
         ? 'Capturar cara B'
         : 'Ambas caras capturadas';
+
+  const activeBatchItem = recovered ? batch.items.find((item) => item.status === 'review' || item.status === 'processing') : null;
+  const progress = batch.summary.total > 0 ? batch.summary.done / batch.summary.total : 0;
 
   return (
     <View style={styles.root}>
@@ -210,7 +258,7 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
             </View>
             <View style={styles.rowActions}>
               <Button title={busy ? 'Procesando...' : 'Capturar cara B'} onPress={handleCaptureBack} style={styles.flexButton} />
-              <Button title="Rehacer" variant="secondary" onPress={() => { setFrontText(null); setPhase('idle'); }} style={styles.flexButton} />
+              <Button title="Rehacer" variant="secondary" onPress={() => { setFrontText(null); setPhase('idle'); saveActiveScanId(null); }} style={styles.flexButton} />
             </View>
             <Button title="Cancelar" variant="ghost" onPress={handleCancelDoubleSide} />
           </>
@@ -225,7 +273,7 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
               </Text>
             </View>
             <View style={styles.rowActions}>
-              <Button title="Rehacer cara A" variant="secondary" onPress={() => { setFrontText(null); setPhase('idle'); }} style={styles.flexButton} />
+              <Button title="Rehacer cara A" variant="secondary" onPress={() => { setFrontText(null); setPhase('idle'); saveActiveScanId(null); }} style={styles.flexButton} />
               <Button title="Cancelar" variant="ghost" onPress={handleCancelDoubleSide} style={styles.flexButton} />
             </View>
           </>
@@ -233,11 +281,14 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
 
         <View style={styles.batchBar}>
           <Text style={styles.batchStatus}>
-            Lote: {batch.summary.total} · pendientes {batch.summary.pending} · errores {batch.summary.failed}
+            Lote: {batch.summary.total} · hechos {batch.summary.done} · pendientes {batch.summary.pending} · errores {batch.summary.failed}
           </Text>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${Math.min(progress * 100, 100)}%` }]} />
+          </View>
           <View style={styles.rowActions}>
             <Button title="Reintentar errores" variant="secondary" onPress={batch.runAll} style={styles.flexButton} />
-            <Button title="Limpiar lote" variant="ghost" onPress={batch.clear} style={styles.flexButton} />
+            <Button title="Limpiar lote" variant="ghost" onPress={async () => { await batch.clear(); await saveActiveScanId(null); }} style={styles.flexButton} />
           </View>
         </View>
       </View>
@@ -267,5 +318,7 @@ const styles = StyleSheet.create({
   flexButton: { flex: 1 },
   batchBar: { gap: spacing.sm },
   batchStatus: { color: palette.muted, fontSize: 12, textAlign: 'center' },
+  progressTrack: { height: 6, borderRadius: 3, backgroundColor: palette.border, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: palette.accent },
   flashOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#ffffff', pointerEvents: 'none' },
 });

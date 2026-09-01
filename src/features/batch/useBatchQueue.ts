@@ -1,21 +1,39 @@
 import { useState, useEffect, useMemo } from 'react';
 import storage from '../../lib/mmkv';
 import { STORAGE_KEYS } from '../../lib/storage';
+import type { Contact } from '../../types/contact';
 
 export type BatchStatus = 'idle' | 'capturing' | 'processing' | 'review' | 'saving' | 'done' | 'error';
 
-export type BatchItem = {
+export interface BatchItem {
   id: string;
   uri: string;
   rawText: string;
+  rawTextFront?: string;
+  rawTextBack?: string;
   status: BatchStatus;
   attempts: number;
+  nextRetryAt?: number;
+  lastError?: string | null;
+  contact?: Contact;
   error?: string;
-};
+}
 
-const MAX_ITEMS = 20;
-const MAX_RETRIES = 2;
-const RETRY_DELAY_MS = 1000;
+export const BATCH_MAX_ITEMS = 20;
+export const BATCH_MAX_RETRIES = 2;
+export const BATCH_BACKOFF_BASE_MS = 1000;
+export const BATCH_BACKOFF_MULTIPLIER = 2;
+
+export function computeNextRetryAt(attempts: number): number {
+  const delay =
+    BATCH_BACKOFF_BASE_MS * Math.pow(BATCH_BACKOFF_MULTIPLIER, Math.max(attempts, 0));
+  return Date.now() + delay;
+}
+
+export function isRetryReady(item: BatchItem): boolean {
+  if (!item.nextRetryAt) return true;
+  return Date.now() >= item.nextRetryAt;
+}
 
 export function useBatchQueue() {
   const [items, setItems] = useState<BatchItem[]>([]);
@@ -41,16 +59,15 @@ export function useBatchQueue() {
   };
 
   const enqueue = async (item: Omit<BatchItem, 'id' | 'status' | 'attempts'>) => {
-    const next: BatchItem[] = [
-      ...items,
-      {
-        ...item,
-        id: `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        status: 'capturing',
-        attempts: 0,
-      },
-    ];
-    await persist(next.slice(-MAX_ITEMS));
+    const newItem: BatchItem = {
+      ...item,
+      id: `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      status: 'capturing',
+      attempts: 0,
+    };
+    const next = [...items, newItem];
+    await persist(next.slice(-BATCH_MAX_ITEMS));
+    return newItem.id;
   };
 
   const updateItem = async (id: string, patch: Partial<BatchItem>) => {
@@ -61,13 +78,32 @@ export function useBatchQueue() {
   const retryItem = async (id: string) => {
     const item = items.find((entry) => entry.id === id);
     if (!item) return;
-    await updateItem(id, { status: 'processing', attempts: item.attempts + 1, error: undefined });
+    const nextAttempts = item.attempts + 1;
+    const patch: Partial<BatchItem> = {
+      status: 'processing',
+      attempts: nextAttempts,
+      error: undefined,
+    };
+    if (nextAttempts < BATCH_MAX_RETRIES) {
+      patch.nextRetryAt = computeNextRetryAt(nextAttempts);
+    }
+    await updateItem(id, patch);
   };
 
   const retryNext = async () => {
-    const nextError = items.find((entry) => entry.status === 'error' && entry.attempts < MAX_RETRIES);
+    const nextError = items.find(
+      (entry) => entry.status === 'error' && entry.attempts < BATCH_MAX_RETRIES && isRetryReady(entry),
+    );
     if (!nextError) return;
     await retryItem(nextError.id);
+  };
+
+  const retryDue = async () => {
+    const due = items.find(
+      (entry) => entry.status === 'error' && entry.attempts < BATCH_MAX_RETRIES && isRetryReady(entry),
+    );
+    if (!due) return;
+    await retryItem(due.id);
   };
 
   const removeItem = async (id: string) => {
@@ -83,14 +119,16 @@ export function useBatchQueue() {
     const total = items.length;
     const pending = items.filter((entry) => entry.status === 'capturing' || entry.status === 'processing').length;
     const failed = items.filter((entry) => entry.status === 'error').length;
-    return { total, pending, failed };
+    const done = items.filter((entry) => entry.status === 'done').length;
+    const processing = items.filter((entry) => entry.status === 'processing').length;
+    return { total, pending, failed, done, processing };
   }, [items]);
 
   const runAll = async () => {
     setLoading(true);
-    await retryNext();
+    await retryDue();
     setLoading(false);
   };
 
-  return { items, loading, enqueue, updateItem, retryItem, retryNext, removeItem, clear, runAll, summary };
+  return { items, loading, enqueue, updateItem, retryItem, retryNext, retryDue, removeItem, clear, runAll, summary };
 }
