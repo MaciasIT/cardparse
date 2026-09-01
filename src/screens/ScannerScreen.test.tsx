@@ -27,6 +27,8 @@ jest.mock('../lib/storage', () => ({
     enabled: true,
   }),
   saveProviderConfig: jest.fn(),
+  loadActiveScanId: jest.fn().mockResolvedValue(null),
+  saveActiveScanId: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../features/ocr/ocrService', () => {
@@ -93,6 +95,15 @@ function clickableWithText(renderer: TestRenderer.ReactTestRenderer, text: strin
 
 async function flush() {
   await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
+
+async function flushLong() {
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
   });
