@@ -22,7 +22,7 @@ jest.mock('../lib/storage', () => ({
     id: 'test',
     provider: 'custom',
     endpoint: 'https://api.test/v1',
-    apiKey: 'sk-test',
+    apiKey: 'test-key',
     model: 'mock-model',
     enabled: true,
   }),
@@ -51,6 +51,16 @@ jest.mock('../features/camera/cropToContent', () => ({
 jest.mock('react-native-share', () => ({
   __esModule: true,
   default: { open: jest.fn() },
+}));
+
+jest.mock('../features/parser/contactParser', () => ({
+  parseContact: jest.fn(() => ({
+    contact: { id: '1', name: 'Test Contact', source: 'both', createdAt: Date.now(), updatedAt: Date.now() },
+  })),
+}));
+
+jest.mock('../features/parser/combineSides', () => ({
+  combineSides: jest.fn(() => 'combined text'),
 }));
 
 type Instance = TestRenderer.ReactTestInstance;
@@ -106,12 +116,23 @@ async function flushLong() {
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
+    await Promise.resolve();
   });
+}
+
+async function waitForText(renderer: TestRenderer.ReactTestRenderer, text: string, timeout = 2000): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    if (hasText(renderer, text)) return;
+    await act(async () => {
+      await Promise.resolve();
+    });
+  }
+  throw new Error(`Timeout waiting for text: ${text}`);
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // fetch no existe en el entorno de test; readImageAsBase64 lo usa para la imagen mock.
   global.fetch = jest.fn().mockResolvedValue({
     arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
   }) as unknown as typeof fetch;
@@ -120,7 +141,7 @@ beforeEach(() => {
 describe('ScannerScreen — doble cara (T17)', () => {
   it('tras capturar la cara A ofrece capturar la cara B en lugar de abrir el Review', async () => {
     let renderer!: TestRenderer.ReactTestRenderer;
-    act(() => {
+    await act(async () => {
       renderer = TestRenderer.create(<ScannerScreen />);
     });
     await flush();
@@ -129,10 +150,9 @@ describe('ScannerScreen — doble cara (T17)', () => {
 
     const capture = clickableWithText(renderer, 'Capturar y procesar');
     await act(async () => {
-      capture!.props.onPress();
-      await Promise.resolve();
-      await Promise.resolve();
+      await capture!.props.onPress();
     });
+    await flushLong();
 
     expect(hasText(renderer, 'Capturar cara B')).toBe(true);
     expect(hasText(renderer, 'Revisar contacto')).toBe(false);
@@ -140,46 +160,44 @@ describe('ScannerScreen — doble cara (T17)', () => {
 
   it('tras capturar ambas caras abre el Review unificado', async () => {
     let renderer!: TestRenderer.ReactTestRenderer;
-    act(() => {
+    await act(async () => {
       renderer = TestRenderer.create(<ScannerScreen />);
     });
     await flush();
 
     const captureA = clickableWithText(renderer, 'Capturar y procesar');
     await act(async () => {
-      captureA!.props.onPress();
-      await Promise.resolve();
-      await Promise.resolve();
+      await captureA!.props.onPress();
     });
+    await waitForText(renderer, 'Capturar cara B');
 
     const captureB = clickableWithText(renderer, 'Capturar cara B');
     await act(async () => {
-      captureB!.props.onPress();
-      await Promise.resolve();
-      await Promise.resolve();
+      await captureB!.props.onPress();
     });
+    await waitForText(renderer, 'Revisar contacto');
 
     expect(hasText(renderer, 'Revisar contacto')).toBe(true);
   });
 
   it('cancelar tras la cara A vuelve al estado inicial sin abrir el Review', async () => {
     let renderer!: TestRenderer.ReactTestRenderer;
-    act(() => {
+    await act(async () => {
       renderer = TestRenderer.create(<ScannerScreen />);
     });
     await flush();
 
     const captureA = clickableWithText(renderer, 'Capturar y procesar');
     await act(async () => {
-      captureA!.props.onPress();
-      await Promise.resolve();
-      await Promise.resolve();
+      await captureA!.props.onPress();
     });
+    await flushLong();
 
     const cancel = clickableWithText(renderer, 'Cancelar');
-    act(() => {
-      cancel!.props.onPress();
+    await act(async () => {
+      await cancel!.props.onPress();
     });
+    await flush();
 
     expect(hasText(renderer, 'Capturar y procesar')).toBe(true);
     expect(hasText(renderer, 'Revisar contacto')).toBe(false);

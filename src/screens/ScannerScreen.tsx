@@ -175,7 +175,6 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
         updatedAt: Date.now(),
       };
 
-      void metadata;
       const current = batch.items.find((item) => item.status === 'processing' || item.status === 'capturing');
       const itemId = current?.id ?? batch.items[batch.items.length - 1]?.id;
       if (itemId) {
@@ -191,16 +190,20 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
     }
   }
 
-  async function markCurrentDone() {
-    const current = batch.items.find((item) => item.status === 'review' || item.status === 'processing');
-    if (current) {
-      await batch.updateItem(current.id, { status: 'done', contact: pendingContact ?? current.contact });
-    }
+  async function resetScanState() {
     await saveActiveScanId(null);
     setPendingContact(null);
     setFrontText(null);
     setBackText(null);
     setPhase('idle');
+  }
+
+  async function markCurrentDone() {
+    const current = batch.items.find((item) => item.status === 'review' || item.status === 'processing');
+    if (current) {
+      await batch.updateItem(current.id, { status: 'done', contact: pendingContact ?? current.contact });
+    }
+    await resetScanState();
     const next = batch.items.find((item) => item.status === 'error' || item.status === 'capturing');
     if (next) {
       Alert.alert('Contacto confirmado', 'Continuando con el siguiente item del lote.');
@@ -213,18 +216,11 @@ export function ScannerScreen({ onCapture }: ScannerScreenProps) {
   }
 
   function handleReviewCancel() {
-    saveActiveScanId(null);
-    setPendingContact(null);
-    setFrontText(null);
-    setBackText(null);
-    setPhase('idle');
+    resetScanState();
   }
 
   function handleCancelDoubleSide() {
-    saveActiveScanId(null);
-    setFrontText(null);
-    setBackText(null);
-    setPhase('idle');
+    resetScanState();
   }
 
   const title =
