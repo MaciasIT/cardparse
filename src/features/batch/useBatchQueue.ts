@@ -77,15 +77,18 @@ export function useBatchQueue() {
 
   const retryItem = async (id: string) => {
     const item = items.find((entry) => entry.id === id);
-    if (!item) return;
+    if (!item || item.status === 'done' || item.status === 'saving') return;
     const nextAttempts = item.attempts + 1;
     const patch: Partial<BatchItem> = {
       status: 'processing',
       attempts: nextAttempts,
       error: undefined,
+      lastError: null,
     };
     if (nextAttempts < BATCH_MAX_RETRIES) {
       patch.nextRetryAt = computeNextRetryAt(nextAttempts);
+    } else {
+      patch.nextRetryAt = undefined;
     }
     await updateItem(id, patch);
   };
@@ -115,6 +118,24 @@ export function useBatchQueue() {
     await persist([]);
   };
 
+  const markDone = async (id: string, contact?: Contact) => {
+    await updateItem(id, { status: 'done', contact, nextRetryAt: undefined, lastError: null, error: undefined });
+  };
+
+  const markError = async (id: string, error?: string) => {
+    const item = items.find((entry) => entry.id === id);
+    const attempts = item?.attempts ?? 0;
+    const patch: Partial<BatchItem> = {
+      status: 'error',
+      error: error ?? 'Error procesando',
+      lastError: error ?? 'Error procesando',
+    };
+    if (attempts < BATCH_MAX_RETRIES) {
+      patch.nextRetryAt = computeNextRetryAt(attempts);
+    }
+    await updateItem(id, patch);
+  };
+
   const summary = useMemo(() => {
     const total = items.length;
     const pending = items.filter((entry) => entry.status === 'capturing' || entry.status === 'processing').length;
@@ -130,5 +151,16 @@ export function useBatchQueue() {
     setLoading(false);
   };
 
-  return { items, loading, enqueue, updateItem, retryItem, retryNext, retryDue, removeItem, clear, runAll, summary };
+  const exportCurrent = async (contact?: Contact) => {
+    const current = items.find((entry) => entry.status === 'review' || entry.status === 'processing' || entry.status === 'capturing');
+    if (!current) return null;
+    await markDone(current.id, contact ?? current.contact);
+    return current.id;
+  };
+
+  const nextItemAfterExport = () => {
+    return items.find((entry) => entry.status === 'error' || entry.status === 'capturing') ?? null;
+  };
+
+  return { items, loading, enqueue, updateItem, retryItem, retryNext, retryDue, removeItem, clear, runAll, markDone, markError, summary, exportCurrent, nextItemAfterExport };
 }
