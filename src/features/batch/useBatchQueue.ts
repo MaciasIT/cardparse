@@ -151,5 +151,16 @@ export function useBatchQueue() {
     setLoading(false);
   };
 
-  return { items, loading, enqueue, updateItem, retryItem, retryNext, retryDue, removeItem, clear, runAll, summary };
+  const exportCurrent = async (contact?: Contact) => {
+    const current = items.find((entry) => entry.status === 'review' || entry.status === 'processing' || entry.status === 'capturing');
+    if (!current) return null;
+    await markDone(current.id, contact ?? current.contact);
+    return current.id;
+  };
+
+  const nextItemAfterExport = () => {
+    return items.find((entry) => entry.status === 'error' || entry.status === 'capturing') ?? null;
+  };
+
+  return { items, loading, enqueue, updateItem, retryItem, retryNext, retryDue, removeItem, clear, runAll, markDone, markError, summary, exportCurrent, nextItemAfterExport };
 }
